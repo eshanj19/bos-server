@@ -111,7 +111,7 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.SUCCESS('BoS NGO admin "%s" added to database' % DEFAULT_NGO_ADMIN_EMAIL))
 
-                admin_group_name = utils.get_ngo_group_name(bos_ngo, GroupType.ADMIN)
+                admin_group_name = utils.get_ngo_group_name(bos_ngo, GroupType.ADMIN.value)
                 admin_group, created = Group.objects.get_or_create(name=admin_group_name)
 
                 for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:

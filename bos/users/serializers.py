@@ -29,6 +29,8 @@ class UserSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
     ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    role = CharField(default=User.ADMIN)
+    is_active = BooleanField(default=True)
 
     class Meta:
         model = User
@@ -105,7 +107,7 @@ class PermissionSerializer(ModelSerializer):
         fields = ('id', 'name', 'codename')
 
 
-class PermissionGroupSerializer(ModelSerializer):
+class PermissionGroupDetailSerializer(ModelSerializer):
     permissions = PermissionSerializer(many=True, read_only=True)
 
     class Meta:
@@ -113,6 +115,13 @@ class PermissionGroupSerializer(ModelSerializer):
         # exclude = ('id',)
         fields = ('id', 'name', 'permissions')
         depth = 2
+
+
+class PermissionGroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        # exclude = ('id',)
+        fields = ('id', 'name',)
 
 
 class UserTemplateSerializer(ModelSerializer):

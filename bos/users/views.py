@@ -26,12 +26,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST, DefaultMeasurementType
+from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.utils import user_sort_by_value, user_filters_from_request
+from bos.utils import user_sort_by_value, user_filters_from_request, get_ngo_group_name
 from measurements.models import Measurement
 from users.models import User, UserReading
-from users.serializers import UserSerializer, PermissionGroupSerializer, PermissionSerializer, AthleteSerializer, \
-    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer
+from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
+    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer, PermissionGroupSerializer
 
 
 class UserViewSet(ViewSet):
@@ -390,16 +391,36 @@ class PermissionGroupViewSet(ViewSet):
             queryset = queryset.order_by(ordering)
         paginator = BOSPageNumberPagination()
         result = paginator.paginate_queryset(queryset, request)
-        serializer = PermissionGroupSerializer(result, many=True)
+        serializer = PermissionGroupDetailSerializer(result, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
         # TODO check if ngo is null
+        ngo = request.user.ngo
+        name = request.data.get('name',None)
+        permissions = request.data.get('permissions',None)
+        if not name:
+            return Response(status=400)
+        create_data = request.data.copy()
+        create_data['name'] = get_ngo_group_name(ngo,name)
 
-        serializer = PermissionGroupSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
+        try:
+            with transaction.atomic():
+                serializer = PermissionGroupSerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+                group = serializer.save()
+                for permission_data in permissions:
+                    permission = Permission.objects.get(id=permission_data['id'])
+                    group.permissions.add(permission)
+
+                return Response(serializer.data, status=201)
+
+        except Permission.DoesNotExist:
+            return Response(status=400)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
         return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
@@ -408,7 +429,7 @@ class PermissionGroupViewSet(ViewSet):
         ngo_key = request.user.ngo.key
         queryset = Group.objects.filter(name__startswith=ngo_key)
         item = get_object_or_404(queryset, pk=pk)
-        serializer = PermissionGroupSerializer(item)
+        serializer = PermissionGroupDetailSerializer(item)
         return Response(serializer.data)
 
     def update(self, request, pk=None):

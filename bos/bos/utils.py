@@ -16,8 +16,8 @@
 from django.db.models import Q
 
 
-def get_ngo_group_name(ngo, group_type):
-    return ngo.key + '_' + group_type.value
+def get_ngo_group_name(ngo, name):
+    return ngo.key + '_' + name
 
 
 def user_sort_by_value(sort, order):
@@ -104,3 +104,26 @@ def measurement_type_filters_from_request(request_data):
                 search_filter = Q(label__icontains=value)
 
     return measurement_type_filter, search_filter
+
+
+def ngo_filters_from_request(request_data):
+    ngo_filter = {}
+    available_ngo_filters = ['is_active']
+    available_ngo_search_filters = ['name']
+
+    for available_ngo_filter in available_ngo_filters:
+        if available_ngo_filter in request_data:
+            value = request_data.get(available_ngo_filter)
+            if value.lower() == 'false':
+                ngo_filter[available_ngo_filter] = False
+            else:
+                ngo_filter[available_ngo_filter] = True
+
+    search_filter = Q()
+    for available_ngo_search_filter in available_ngo_search_filters:
+        if available_ngo_search_filter in request_data:
+            value = request_data.get(available_ngo_search_filter)
+            if available_ngo_search_filter == 'name':
+                search_filter = Q(name__icontains=value)
+
+    return ngo_filter, search_filter

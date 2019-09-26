@@ -32,7 +32,6 @@ def generate_resource_key():
 class NGO(models.Model):
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_NGO, default=generate_ngo_key, unique=True)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
-    address = models.CharField(max_length=200, null=False, blank=False)
     logo = models.CharField(max_length=200, null=True, blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     is_active = models.BooleanField(default=True, blank=True)
