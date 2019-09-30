@@ -19,7 +19,6 @@ from django.contrib.auth.models import Group, Permission
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
-from rest_framework import pagination
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -28,7 +27,7 @@ from rest_framework.viewsets import ViewSet
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST, DefaultMeasurementType
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.utils import user_sort_by_value, user_filters_from_request, get_ngo_group_name
+from bos.utils import user_filters_from_request, get_ngo_group_name
 from measurements.models import Measurement
 from users.models import User, UserReading
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \

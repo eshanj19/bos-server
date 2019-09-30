@@ -83,8 +83,6 @@ class NGOViewSet(ViewSet):
                     "ngo": ngo.key
                 }
 
-                print(password)
-                print(confirm_password)
                 if not password or not confirm_password or (password != confirm_password):
                     raise ValidationException({"password":"Passwords dont match"})
                 serializer = UserSerializer(data=create_data)

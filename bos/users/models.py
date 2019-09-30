@@ -114,11 +114,11 @@ class UserReading(models.Model):
     entered_by = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT,
                                    related_name='entered_by')
     measurement = models.ForeignKey('measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
-    user_resource_template = models.ForeignKey('users.UserTemplate', related_name='template', null=True, blank=True,
+    resource = models.ForeignKey('resources.Resource', related_name='resource', null=True, blank=True,
                                                on_delete=models.PROTECT)
-    user_resource_template_session = models.ForeignKey('users.UserTemplate', related_name='session_template', null=True,
+    resource_session = models.ForeignKey('resources.Resource', related_name='resource_session', null=True,
                                                        blank=True, on_delete=models.PROTECT)
-    resource_template_session_uuid = models.CharField(max_length=100, null=True, blank=True)
+    resource_session_uuid = models.CharField(max_length=100, null=True, blank=True)
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)
@@ -154,25 +154,17 @@ class UserResetPassword(models.Model):
         db_table = 'user_reset_password'
 
 
-class UserTemplate(models.Model):
+class UserResource(models.Model):
     user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
-    resource_template = models.ForeignKey('ngos.ResourceTemplate', null=False, blank=False, on_delete=models.PROTECT)
+    resource = models.ForeignKey('resources.Resource', null=False, blank=False, on_delete=models.PROTECT)
     data = JSONField()
     is_active = models.BooleanField(default=True, blank=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'user_templates'
+        db_table = 'user_resources'
+        unique_together = ('user', 'resource')
 
 
-class UserFile(models.Model):
-    user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
-    resource_file = models.ForeignKey('ngos.ResourceFile', null=False, blank=False, on_delete=models.PROTECT)
-    is_active = models.BooleanField(default=True, blank=True)
-    creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
-    last_modification_time = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        db_table = 'user_files'
-        unique_together = ('user', 'resource_file')

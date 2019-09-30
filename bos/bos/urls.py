@@ -22,6 +22,7 @@ from rest_framework import routers
 from measurements import views as measurement_views
 from ngos import views as ngo_views
 from users import views as user_views
+from resources import views as resource_views
 
 router = routers.SimpleRouter()
 router.register(r'users', user_views.UserViewSet, base_name='users')
@@ -32,8 +33,7 @@ router.register(r'ngos', ngo_views.NGOViewSet, 'NGO')
 router.register(r'measurements', measurement_views.MeasurementViewSet, 'Measurement')
 router.register(r'measurement_types', measurement_views.MeasurementTypeViewSet, 'MeasurementType')
 router.register(r'permission_groups', user_views.PermissionGroupViewSet, 'PermissionGroup')
-# router.register(r'resourcetemplate', ngo_views.ResourceTemplateViewSet, 'ResourceTemplate')
-# router.register(r'resourcefile', ngo_views.ResourceFileViewSet, 'ResourceFile')
+router.register(r'resources', resource_views.ResourceViewSet, 'ResourceTemplate')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

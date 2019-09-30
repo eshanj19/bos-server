@@ -16,7 +16,7 @@
 
 from rest_framework.serializers import ModelSerializer
 
-from ngos.models import NGO, ResourceTemplate, ResourceFile
+from ngos.models import NGO
 
 
 class NGOSerializer(ModelSerializer):
@@ -25,22 +25,4 @@ class NGOSerializer(ModelSerializer):
 
     class Meta:
         model = NGO
-        exclude = ('id',)
-
-
-class ResourceTemplateSerializer(ModelSerializer):
-    lookup_field = 'key'
-    pk_field = 'key'
-
-    class Meta:
-        model = ResourceTemplate
-        exclude = ('id',)
-
-
-class ResourceFileSerializer(ModelSerializer):
-    lookup_field = 'key'
-    pk_field = 'key'
-
-    class Meta:
-        model = ResourceFile
         exclude = ('id',)

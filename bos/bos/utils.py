@@ -127,3 +127,26 @@ def ngo_filters_from_request(request_data):
                 search_filter = Q(name__icontains=value)
 
     return ngo_filter, search_filter
+
+
+def resource_filters_from_request(request_data):
+    resource_filter = {}
+    available_resource_filters = ['is_active']
+    available_resource_search_filters = ['name']
+
+    for available_resource_filter in available_resource_filters:
+        if available_resource_filter in request_data:
+            value = request_data.get(available_resource_filter)
+            if value.lower() == 'false':
+                resource_filter[available_resource_filter] = False
+            else:
+                resource_filter[available_resource_filter] = True
+
+    search_filter = Q()
+    for available_resource_search_filter in available_resource_search_filters:
+        if available_resource_search_filter in request_data:
+            value = request_data.get(available_resource_search_filter)
+            if available_resource_search_filter == 'name':
+                search_filter = Q(name__icontains=value)
+
+    return resource_filter, search_filter

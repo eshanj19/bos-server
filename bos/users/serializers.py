@@ -22,7 +22,7 @@ from rest_framework.serializers import ModelSerializer
 from measurements.models import Measurement
 from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
-from users.models import User, UserHierarchy, UserTemplate, UserFile, generate_username, UserReading
+from users.models import User, UserHierarchy, generate_username, UserReading, UserResource
 
 
 class UserSerializer(ModelSerializer):
@@ -124,13 +124,9 @@ class PermissionGroupSerializer(ModelSerializer):
         fields = ('id', 'name',)
 
 
-class UserTemplateSerializer(ModelSerializer):
+class UserResourceSerializer(ModelSerializer):
     class Meta:
-        model = UserTemplate
+        model = UserResource
         exclude = ('id',)
 
 
-class UserFileSerializer(ModelSerializer):
-    class Meta:
-        model = UserFile
-        exclude = ('id',)

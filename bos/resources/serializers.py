@@ -14,6 +14,15 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from django.test import TestCase
+from rest_framework.serializers import ModelSerializer
 
-# Create your tests here.
+from resources.models import Resource
+
+
+class ResourceSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+
+    class Meta:
+        model = Resource
+        exclude = ('id',)

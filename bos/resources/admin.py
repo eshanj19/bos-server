@@ -14,6 +14,6 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from django.test import TestCase
+from django.contrib import admin
 
-# Create your tests here.
+# Register your models here.
