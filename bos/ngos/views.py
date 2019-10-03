@@ -24,14 +24,14 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos import utils
-from bos.constants import GroupType
+from bos.constants import GroupType, METHOD_POST, METHOD_GET
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
 from bos.utils import ngo_filters_from_request
-from measurements.models import generate_measurement_key
-from measurements.serializers import MeasurementTypeSerializer
+from measurements.models import generate_measurement_key, Measurement
+from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
 from ngos.models import NGO
 from ngos.serializers import NGOSerializer
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionGroupSerializer
@@ -138,7 +138,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
     # TODO permissions
-    @action(detail=True,methods=['POST'])
+    @action(detail=True,methods=[METHOD_POST])
     def deactivate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -149,7 +149,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
     # TODO permissions
-    @action(detail=True,methods=['POST'])
+    @action(detail=True,methods=[METHOD_POST])
     def activate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -160,7 +160,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
         # TODO permissions
-    @action(detail=True, methods=['GET'])
+    @action(detail=True, methods=[METHOD_GET])
     def permission_groups(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -171,81 +171,14 @@ class NGOViewSet(ViewSet):
         serializer = PermissionGroupSerializer(queryset, many=True)
         return Response(serializer.data)
 
-class ResourceTemplateViewSet(ViewSet):
+    @action(detail=True, methods=[METHOD_GET])
+    def measurements(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
 
-    def list(self, request):
-        queryset = ResourceTemplate.objects.all()
-        serializer = ResourceTemplateSerializer(queryset, many=True)
+        queryset = Measurement.objects.filter(ngo=ngo,is_active=True)
+        serializer = MeasurementSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    def create(self, request):
-        serializer = ResourceTemplateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-    def retrieve(self, request, pk=None):
-        queryset = ResourceTemplate.objects.all()
-        item = get_object_or_404(queryset, pk=pk)
-        serializer = ResourceTemplateSerializer(item)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        try:
-            item = ResourceTemplate.objects.get(pk=pk)
-        except ResourceTemplate.DoesNotExist:
-            return Response(status=404)
-        serializer = ResourceTemplateSerializer(item, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
-    def destroy(self, request, pk=None):
-        try:
-            item = ResourceTemplate.objects.get(pk=pk)
-        except ResourceTemplate.DoesNotExist:
-            return Response(status=404)
-        item.delete()
-        return Response(status=204)
-
-
-class ResourceFileViewSet(ViewSet):
-
-    def list(self, request):
-        queryset = ResourceFile.objects.all()
-        serializer = ResourceFileSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = ResourceFileSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-    def retrieve(self, request, pk=None):
-        queryset = ResourceFile.objects.all()
-        item = get_object_or_404(queryset, pk=pk)
-        serializer = ResourceFileSerializer(item)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        try:
-            item = ResourceFile.objects.get(pk=pk)
-        except ResourceFile.DoesNotExist:
-            return Response(status=404)
-        serializer = ResourceFileSerializer(item, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
-    def destroy(self, request, pk=None):
-        try:
-            item = ResourceFile.objects.get(pk=pk)
-        except ResourceFile.DoesNotExist:
-            return Response(status=404)
-        item.delete()
-        return Response(status=204)

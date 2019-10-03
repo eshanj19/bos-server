@@ -32,7 +32,8 @@ LENGTH_RESET_PASSWORD_TOKEN = 10
 LENGTH_USERNAME = 10
 FIELD_LENGTH_NAME = 50
 API_URL = 'http://192.168.0.2/reset_password/'
-
+METHOD_POST= 'POST'
+METHOD_GET= 'GET'
 
 class DisableCSRFMiddleware(object):
     def __init__(self, get_response):
