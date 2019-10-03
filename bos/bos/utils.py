@@ -150,3 +150,5 @@ def resource_filters_from_request(request_data):
                 search_filter = Q(name__icontains=value)
 
     return resource_filter, search_filter
+
+
