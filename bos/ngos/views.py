@@ -34,6 +34,8 @@ from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
 from ngos.models import NGO
 from ngos.serializers import NGOSerializer
+from resources.models import Resource
+from resources.serializers import ResourceSerializer
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionGroupSerializer
 
 
@@ -181,4 +183,38 @@ class NGOViewSet(ViewSet):
         queryset = Measurement.objects.filter(ngo=ngo,is_active=True)
         serializer = MeasurementSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET])
+    def files(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        queryset = Resource.objects.filter(ngo=ngo,type=Resource.FILE, is_active=True)
+        serializer = ResourceSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET])
+    def curricula(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        queryset = Resource.objects.filter(ngo=ngo, type=Resource.CURRICULUM, is_active=True)
+        serializer = ResourceSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_POST])
+    def training_sessions(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        queryset = Resource.objects.filter(ngo=ngo, type=Resource.TRAINING_SESSION, is_active=True)
+        serializer = ResourceSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 

@@ -55,6 +55,7 @@ class ResourceViewSet(ViewSet):
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
 
+                serializer.save()
                 return Response(serializer.data, status=201)
 
         except ValidationException as e:
@@ -71,7 +72,13 @@ class ResourceViewSet(ViewSet):
             item = Resource.objects.get(key=pk)
         except Resource.DoesNotExist:
             return Response(status=404)
-        serializer = ResourceSerializer(item, data=request.data)
+
+        if request.user.ngo != item.ngo:
+            return Response(status=400)
+
+        update_data = request.data.copy()
+        update_data['ngo'] = request.user.ngo.key
+        serializer = ResourceSerializer(item, data=update_data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

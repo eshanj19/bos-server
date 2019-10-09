@@ -33,7 +33,7 @@ router.register(r'ngos', ngo_views.NGOViewSet, 'NGO')
 router.register(r'measurements', measurement_views.MeasurementViewSet, 'Measurement')
 router.register(r'measurement_types', measurement_views.MeasurementTypeViewSet, 'MeasurementType')
 router.register(r'permission_groups', user_views.PermissionGroupViewSet, 'PermissionGroup')
-router.register(r'resources', resource_views.ResourceViewSet, 'ResourceTemplate')
+router.register(r'resources', resource_views.ResourceViewSet, 'Resource')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
