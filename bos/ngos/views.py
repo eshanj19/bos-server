@@ -246,7 +246,7 @@ class NGOViewSet(ViewSet):
         return Response(data=json)
 
     @action(detail=True, methods=[METHOD_POST])
-    def mark_resource_as_coach_registration_resource(self, request, pk=None):
+    def mark_as_coach_registration_resource(self, request, pk=None):
         # TODO
         try:
             ngo = NGO.objects.get(key=pk)
@@ -280,7 +280,7 @@ class NGOViewSet(ViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_POST])
-    def mark_resource_as_athlete_registration_resource(self, request, pk=None):
+    def mark_as_athlete_registration_resource(self, request, pk=None):
         # TODO
         try:
             ngo = NGO.objects.get(key=pk)

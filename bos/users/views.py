@@ -27,11 +27,12 @@ from rest_framework.viewsets import ViewSet
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST, DefaultMeasurementType
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.utils import user_filters_from_request, get_ngo_group_name
+from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request
 from measurements.models import Measurement
-from users.models import User, UserReading
+from users.models import User, UserReading, UserGroup
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
-    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer, PermissionGroupSerializer
+    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer, PermissionGroupSerializer, \
+    UserGroupSerializer, UserGroupReadOnlySerializer
 
 
 class UserViewSet(ViewSet):
@@ -329,6 +330,68 @@ class CoachViewSet(ViewSet):
                                               measurement__type__label=DefaultMeasurementType.COACH_BASELINE.value)
         serializer = UserReadingReadOnlySerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class UserGroupViewSet(ViewSet):
+
+    def list(self, request):
+        user_group_filters, search_filters = user_group_filters_from_request(request.GET)
+        ordering = request.GET.get('ordering', None)
+        common_filters = {
+            'ngo': request.user.ngo,
+        }
+        filters = {**common_filters, **user_group_filters}
+
+        queryset = UserGroup.objects.filter(search_filters, **filters)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        paginator = BOSPageNumberPagination()
+        result = paginator.paginate_queryset(queryset, request)
+        serializer = UserGroupSerializer(result, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def create(self, request):
+        #  TODO validation users belong to the same ngo
+        create_data = request.data.copy()
+        create_data['ngo'] = request.user.ngo.key
+        try:
+            with transaction.atomic():
+                serializer = UserGroupReadOnlySerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                _ = serializer.save()
+                return Response(serializer.data, status=201)
+
+        except DatabaseError:
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(data=e.errors,status=400)
+
+    def retrieve(self, request, pk=None):
+        queryset = UserGroup.objects.all()
+        item = get_object_or_404(queryset, key=pk)
+        serializer = UserGroupReadOnlySerializer(item)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        try:
+            item = UserGroup.objects.get(key=pk)
+        except UserGroup.DoesNotExist:
+            return Response(status=404)
+        serializer = UserGroupReadOnlySerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def destroy(self, request, pk=None):
+        try:
+            item = UserGroup.objects.get(key=pk)
+        except UserGroup.DoesNotExist:
+            return Response(status=404)
+        item.delete()
+        return Response(status=204)
 
 
 @api_view(['POST'])

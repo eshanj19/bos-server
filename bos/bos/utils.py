@@ -152,3 +152,24 @@ def resource_filters_from_request(request_data):
     return resource_filter, search_filter
 
 
+def user_group_filters_from_request(request_data):
+    user_group_filter = {}
+    available_user_group_filters = ['is_active']
+    available_user_group_search_filters = ['label']
+
+    for available_user_group_filter in available_user_group_filters:
+        if available_user_group_filter in request_data:
+            value = request_data.get(available_user_group_filter)
+            if value.lower() == 'false':
+                user_group_filter[available_user_group_filter] = False
+            else:
+                user_group_filter[available_user_group_filter] = True
+
+    search_filter = Q()
+    for available_user_group_search_filter in available_user_group_search_filters:
+        if available_user_group_search_filter in request_data:
+            value = request_data.get(available_user_group_search_filter)
+            if available_user_group_search_filter == 'label':
+                search_filter = Q(first_name__icontains=value) | Q(last_name__icontains=value)
+
+    return user_group_filter, search_filter
