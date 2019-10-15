@@ -39,3 +39,25 @@ class NGO(models.Model):
     def __str__(self):
         return self.name
 
+
+class NGORegistrationResource(models.Model):
+    NGO = 'ngo'
+    COACH = 'coach'
+    ATHLETE = 'athlete'
+    REGISTRATION_TYPES = (
+        (NGO, 'ngo'),
+        (COACH, 'coach'),
+        (ATHLETE, 'athlete'),
+    )
+
+    type = models.CharField(choices=REGISTRATION_TYPES, max_length=50, null=False, blank=False)
+    resource = models.ForeignKey('resources.Resource', null=False, blank=False, on_delete=models.PROTECT)
+    ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
+    creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    last_modification_time = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'ngo_registration_resource'
+
+    def __str__(self):
+        return self.label

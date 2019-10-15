@@ -16,10 +16,8 @@
 
 from rest_framework import permissions
 
-
 # BOS_ADMIN
 PERMISSION_BOS_ADMIN = ('bos_admin', 'bos admin', 'users.bos_admin')
-
 
 # MEASUREMENT
 PERMISSION_CAN_ADD_MEASUREMENT = ('add_measurement', 'Can add measurement', 'measurements.add_measurement')
@@ -31,7 +29,8 @@ PERMISSIONS_MEASUREMENT = [PERMISSION_CAN_ADD_MEASUREMENT, PERMISSION_CAN_CHANGE
                            PERMISSION_CAN_VIEW_MEASUREMENT]
 
 # MEASUREMENT_TYPES
-PERMISSION_CAN_ADD_MEASUREMENT_TYPE = ('add_measurementtype', 'Can add measurement type', 'measurements.add_measurementtype')
+PERMISSION_CAN_ADD_MEASUREMENT_TYPE = (
+'add_measurementtype', 'Can add measurement type', 'measurements.add_measurementtype')
 PERMISSION_CAN_CHANGE_MEASUREMENT_TYPE = (
     'change_measurementtype', 'Can change measurement type', 'measurements.change_measurementtype')
 PERMISSION_CAN_DESTROY_MEASUREMENT_TYPE = (
@@ -101,3 +100,50 @@ class CanViewUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return has_permission(request, PERMISSION_CAN_VIEW_USER)
 
+
+class CanAddMeasurement(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_MEASUREMENT)
+
+
+class CanChangeMeasurement(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_MEASUREMENT)
+
+
+class CanDeleteMeasurement(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_MEASUREMENT)
+
+
+class CanViewMeasurement(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT)
+
+
+class CanAddMeasurementType(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_MEASUREMENT_TYPE)
+
+
+class CanChangeMeasurementType(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_MEASUREMENT_TYPE)
+
+
+class CanDeleteMeasurementType(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_MEASUREMENT_TYPE)
+
+
+class CanViewMeasurementType(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT_TYPE)

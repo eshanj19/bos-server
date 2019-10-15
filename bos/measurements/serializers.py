@@ -24,7 +24,7 @@ class MeasurementSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
     ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
-    type = SlugRelatedField(slug_field='key', queryset=MeasurementType.objects.all())
+    types = SlugRelatedField(slug_field='key', queryset=MeasurementType.objects.all(),many=True)
 
     class Meta:
         model = Measurement

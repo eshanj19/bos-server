@@ -13,10 +13,12 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from ngos.models import NGO
+from ngos.models import NGO, NGORegistrationResource
+from resources.models import Resource
+from resources.serializers import ResourceSerializer
 
 
 class NGOSerializer(ModelSerializer):
@@ -25,4 +27,22 @@ class NGOSerializer(ModelSerializer):
 
     class Meta:
         model = NGO
+        exclude = ('id',)
+
+
+class NGORegistrationResourceSerializer(ModelSerializer):
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all())
+
+    class Meta:
+        model = NGORegistrationResource
+        exclude = ('id',)
+
+
+class NGORegistrationResourceDetailSerializer(ModelSerializer):
+    resource = ResourceSerializer()
+    ngo = NGOSerializer()
+
+    class Meta:
+        model = NGORegistrationResource
         exclude = ('id',)

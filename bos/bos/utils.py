@@ -59,7 +59,7 @@ def user_filters_from_request(request_data):
 
 def measurement_filters_from_request(request_data):
     measurement_filter = {}
-    available_measurement_filters = ['is_active', 'type']
+    available_measurement_filters = ['is_active', 'types']
     available_measurement_search_filters = ['label']
 
     for available_measurement_filter in available_measurement_filters:
@@ -70,8 +70,8 @@ def measurement_filters_from_request(request_data):
                     measurement_filter[available_measurement_filter] = False
                 else:
                     measurement_filter[available_measurement_filter] = True
-            if available_measurement_filter == 'type':
-                measurement_filter['type__key'] = value
+            if available_measurement_filter == 'types':
+                measurement_filter['types__key'] = value
 
     search_filter = Q()
     for available_measurement_search_filter in available_measurement_search_filters:

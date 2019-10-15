@@ -13,13 +13,13 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import logging
 
 from django.contrib.auth.models import Group, Permission
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -32,11 +32,11 @@ from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
-from ngos.models import NGO
-from ngos.serializers import NGOSerializer
+from ngos.models import NGO, NGORegistrationResource
+from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, NGORegistrationResourceDetailSerializer
 from resources.models import Resource
 from resources.serializers import ResourceSerializer
-from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionGroupSerializer
+from users.serializers import UserSerializer, PermissionGroupSerializer
 
 
 class NGOViewSet(ViewSet):
@@ -71,22 +71,22 @@ class NGOViewSet(ViewSet):
                         raise ValidationException(serializer.errors)
                     serializer.save()
 
-                first_name = request.data.get('first_name',None)
-                last_name = request.data.get('last_name',None)
-                password = request.data.get('password',None)
-                confirm_password = request.data.get('confirm_password',None)
-                email = request.data.get('email',None)
-                username = request.data.get('username',None)
-                create_data= {
-                    "first_name" : first_name,
-                    "last_name" : last_name,
-                    "email" : email,
-                    "username" : username,
+                first_name = request.data.get('first_name', None)
+                last_name = request.data.get('last_name', None)
+                password = request.data.get('password', None)
+                confirm_password = request.data.get('confirm_password', None)
+                email = request.data.get('email', None)
+                username = request.data.get('username', None)
+                create_data = {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                    "username": username,
                     "ngo": ngo.key
                 }
 
                 if not password or not confirm_password or (password != confirm_password):
-                    raise ValidationException({"password":"Passwords dont match"})
+                    raise ValidationException({"password": "Passwords dont match"})
                 serializer = UserSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
@@ -140,7 +140,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
     # TODO permissions
-    @action(detail=True,methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST])
     def deactivate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -151,7 +151,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
     # TODO permissions
-    @action(detail=True,methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST])
     def activate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -162,6 +162,7 @@ class NGOViewSet(ViewSet):
         return Response(status=204)
 
         # TODO permissions
+
     @action(detail=True, methods=[METHOD_GET])
     def permission_groups(self, request, pk=None):
         try:
@@ -180,7 +181,7 @@ class NGOViewSet(ViewSet):
         except NGO.DoesNotExist:
             return Response(status=404)
 
-        queryset = Measurement.objects.filter(ngo=ngo,is_active=True)
+        queryset = Measurement.objects.filter(ngo=ngo, is_active=True)
         serializer = MeasurementSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -191,7 +192,7 @@ class NGOViewSet(ViewSet):
         except NGO.DoesNotExist:
             return Response(status=404)
 
-        queryset = Resource.objects.filter(ngo=ngo,type=Resource.FILE, is_active=True)
+        queryset = Resource.objects.filter(ngo=ngo, type=Resource.FILE, is_active=True)
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -206,7 +207,7 @@ class NGOViewSet(ViewSet):
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_GET])
     def training_sessions(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -217,4 +218,127 @@ class NGOViewSet(ViewSet):
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def active_ngos(self, request, pk=None):
+        ngos = NGO.objects.filter(is_active=True)
+        serializer = NGOSerializer(ngos, many=True)
+        return Response(serializer.data)
 
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def coach_registration_form(self, request, pk=None):
+        # TODO
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+        json = {
+            "label": "Coach registration form",
+            "type": Resource.TRAINING_SESSION,
+            "children": [
+                {"label": "Weight", "type": "MEASUREMENT"},
+                {"label": "Height", "type": "MEASUREMENT"},
+                {"label": "BMI", "type": "MEASUREMENT"},
+                {"label": "First Name", "type": "MEASUREMENT"},
+                {"label": "Last Name", "type": "MEASUREMENT"},
+            ]
+
+        }
+        return Response(data=json)
+
+    @action(detail=True, methods=[METHOD_POST])
+    def mark_resource_as_coach_registration_resource(self, request, pk=None):
+        # TODO
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        if ngo != request.user.ngo:
+            return Response(status=400)
+        create_data = request.data.copy()
+        create_data['type'] = NGORegistrationResource.COACH
+        create_data['ngo'] = ngo.key
+        # TODO error
+
+        try:
+            with transaction.atomic():
+                serializer = NGORegistrationResourceSerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                existing_registration_resources = NGORegistrationResource.objects.filter(ngo=ngo,
+                                                                                         type=NGORegistrationResource.COACH).all()
+                for existing_registration_resource in existing_registration_resources:
+                    existing_registration_resource.delete()
+
+                serializer.save()
+        except DatabaseError:
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_POST])
+    def mark_resource_as_athlete_registration_resource(self, request, pk=None):
+        # TODO
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        if ngo != request.user.ngo:
+            return Response(status=400)
+        create_data = request.data.copy()
+        create_data['type'] = NGORegistrationResource.COACH
+        # TODO error
+
+        try:
+            with transaction.atomic():
+                serializer = NGORegistrationResourceSerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                existing_registration_resources = NGORegistrationResource.objects.filter(ngo=ngo,
+                                                                                         type=NGORegistrationResource.ATHLETE).all()
+                for existing_registration_resource in existing_registration_resources:
+                    existing_registration_resource.delete()
+
+                serializer.save()
+        except DatabaseError:
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def coach_registration_resource(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        try:
+            resource = NGORegistrationResource.objects.get(ngo=ngo,type=NGORegistrationResource.COACH)
+        except NGORegistrationResource.DoesNotExist:
+            return Response(status=404)
+
+        serializer = NGORegistrationResourceDetailSerializer(resource)
+        return Response(serializer.data)
+
+    # TODO permissions
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def athlete_registration_resource(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        try:
+            resource = NGORegistrationResource.objects.get(ngo=ngo,type=NGORegistrationResource.ATHLETE)
+        except NGORegistrationResource.DoesNotExist:
+            return Response(status=404)
+
+        serializer = NGORegistrationResourceDetailSerializer(resource)
+        return Response(serializer.data)
