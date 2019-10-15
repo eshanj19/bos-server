@@ -13,23 +13,27 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+from django.db import transaction
 from django.shortcuts import get_object_or_404
-from rest_framework import pagination
+from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import action
-from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from bos.defaults import DefaultMeasurementType
+from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
+from bos.permissions import has_permission, PERMISSION_CAN_VIEW_MEASUREMENT
 from bos.utils import measurement_filters_from_request, measurement_type_filters_from_request
-from measurements.serializers import MeasurementSerializer, MeasurementTypeSerializer
 from measurements.models import Measurement, MeasurementType
+from measurements.serializers import MeasurementSerializer, MeasurementTypeSerializer
 
 
 class MeasurementViewSet(ViewSet):
 
     def list(self, request):
+        if not has_permission(request,PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
         measurement_filters, search_filters = measurement_filters_from_request(request.GET)
         ordering = request.GET.get('ordering', None)
         common_filters = {
@@ -48,11 +52,20 @@ class MeasurementViewSet(ViewSet):
     def create(self, request):
         create_data = request.data
         create_data['ngo'] = request.user.ngo.key
-        serializer = MeasurementSerializer(data=create_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        try:
+            with transaction.atomic():
+                serializer = MeasurementSerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+                serializer.save()
+                return Response(serializer.data, status=201)
+
+        except DatabaseError:
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+
 
     def retrieve(self, request, pk=None):
         queryset = Measurement.objects.all()

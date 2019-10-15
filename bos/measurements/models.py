@@ -39,7 +39,7 @@ class Measurement(models.Model):
 
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_MEASUREMENT, default=generate_measurement_key, unique=True)
     label = models.CharField(max_length=50, null=False, blank=False)
-    type = models.ForeignKey('measurements.MeasurementType', null=False, blank=False, on_delete=models.PROTECT)
+    types = models.ManyToManyField('measurements.MeasurementType', blank=False)
     input_type = models.CharField(choices=MEASUREMENT_INPUT_TYPES, max_length=50, null=False, blank=False)
     uom = models.CharField(max_length=50, null=True, blank=True, default=None)
     is_active = models.BooleanField(default=True, blank=True)
