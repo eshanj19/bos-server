@@ -28,8 +28,8 @@ SECRET_KEY = '$p=crriv*jat1*fa4(s3e7#vzvh1^voe53280z^1wqggsbd-%8'
 DEBUG = True
 
 # HOST_IP = '192.168.0.105'
-HOST_IP = '192.168.0.122'
-# HOST_IP = '192.168.1.100'
+# HOST_IP = '192.168.0.122'
+HOST_IP = '192.168.1.100'
 HOST_IP_PORT = HOST_IP + ':3000'
 ALLOWED_HOSTS = [HOST_IP]
 
@@ -201,8 +201,8 @@ logging.config.dictConfig({
     'loggers': {
         # root logger
         '': {
-            # 'level': 'WARNING',
-            'level': 'DEBUG',
+            'level': 'WARNING',
+            # 'level': 'DEBUG',
             'handlers': ['console'],
         },
     },

@@ -175,6 +175,7 @@ class UserGroup(models.Model):
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_GROUP, default=generate_user_group_key, unique=True)
     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
     users = models.ManyToManyField('users.User', blank=False)
+    resources = models.ManyToManyField('resources.Resource', blank=False)
     ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True, blank=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
