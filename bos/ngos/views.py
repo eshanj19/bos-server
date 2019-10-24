@@ -246,7 +246,7 @@ class NGOViewSet(ViewSet):
         return Response(data=json)
 
     @action(detail=True, methods=[METHOD_POST])
-    def mark_resource_as_coach_registration_resource(self, request, pk=None):
+    def mark_as_coach_registration_resource(self, request, pk=None):
         # TODO
         try:
             ngo = NGO.objects.get(key=pk)
@@ -269,6 +269,7 @@ class NGOViewSet(ViewSet):
                 existing_registration_resources = NGORegistrationResource.objects.filter(ngo=ngo,
                                                                                          type=NGORegistrationResource.COACH).all()
                 for existing_registration_resource in existing_registration_resources:
+                    print("deleted resource")
                     existing_registration_resource.delete()
 
                 serializer.save()
@@ -280,7 +281,7 @@ class NGOViewSet(ViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_POST])
-    def mark_resource_as_athlete_registration_resource(self, request, pk=None):
+    def mark_as_athlete_registration_resource(self, request, pk=None):
         # TODO
         try:
             ngo = NGO.objects.get(key=pk)
@@ -290,7 +291,9 @@ class NGOViewSet(ViewSet):
         if ngo != request.user.ngo:
             return Response(status=400)
         create_data = request.data.copy()
-        create_data['type'] = NGORegistrationResource.COACH
+        create_data['type'] = NGORegistrationResource.ATHLETE
+        create_data['ngo'] = ngo.key
+
         # TODO error
 
         try:
@@ -318,9 +321,10 @@ class NGOViewSet(ViewSet):
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
             return Response(status=404)
-
+        if ngo != request.user.ngo:
+            return Response(status=403)
         try:
-            resource = NGORegistrationResource.objects.get(ngo=ngo,type=NGORegistrationResource.COACH)
+            resource = NGORegistrationResource.objects.get(ngo=ngo, type=NGORegistrationResource.COACH)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 
@@ -336,9 +340,27 @@ class NGOViewSet(ViewSet):
             return Response(status=404)
 
         try:
-            resource = NGORegistrationResource.objects.get(ngo=ngo,type=NGORegistrationResource.ATHLETE)
+            resource = NGORegistrationResource.objects.get(ngo=ngo, type=NGORegistrationResource.ATHLETE)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 
         serializer = NGORegistrationResourceDetailSerializer(resource)
         return Response(serializer.data)
+
+
+class PingViewSet(ViewSet):
+
+    def list(self, request):
+        return Response(status=200)
+
+    def create(self, request):
+        return Response(status=201)
+
+    def retrieve(self, request, pk=None):
+        return Response(status=200)
+
+    def update(self, request, pk=None):
+        return Response(status=200)
+
+    def destroy(self, request, pk=None):
+        return Response(status=204)

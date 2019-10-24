@@ -22,10 +22,23 @@ from rest_framework.serializers import ModelSerializer
 from measurements.models import Measurement
 from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
-from users.models import User, UserHierarchy, generate_username, UserReading, UserResource
+from resources.models import Resource
+from users.models import User, UserHierarchy, generate_username, UserReading, UserResource, UserGroup
 
 
 class UserSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    role = CharField(default=User.ADMIN)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = User
+        exclude = ('id',)
+
+
+class AdminSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
     ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
@@ -72,6 +85,7 @@ class UserReadingSerializer(ModelSerializer):
     entered_by = SlugRelatedField(slug_field='key', queryset=User.objects.all())
     measurement = SlugRelatedField(slug_field='key', queryset=Measurement.objects.all())
     measurement_object = MeasurementSerializer(read_only=True)
+    # resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all(),default=None)
     is_active = BooleanField(default=True)
 
     class Meta:
@@ -91,6 +105,19 @@ class UserReadingReadOnlySerializer(ModelSerializer):
 
     class Meta:
         model = UserReading
+        exclude = ('id',)
+
+
+class UserGroupReadOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    users = SlugRelatedField(slug_field='key', queryset=User.objects.all(), many=True)
+    resources = SlugRelatedField(slug_field='key', queryset=Resource.objects.all(), many=True)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = UserGroup
         exclude = ('id',)
 
 
@@ -130,3 +157,7 @@ class UserResourceSerializer(ModelSerializer):
         exclude = ('id',)
 
 
+class UserGroupSerializer(ModelSerializer):
+    class Meta:
+        model = UserGroup
+        exclude = ('id',)

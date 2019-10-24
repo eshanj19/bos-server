@@ -131,24 +131,52 @@ def ngo_filters_from_request(request_data):
 
 def resource_filters_from_request(request_data):
     resource_filter = {}
-    available_resource_filters = ['is_active']
-    available_resource_search_filters = ['name']
+    available_resource_filters = ['is_active','type']
+    available_resource_search_filters = ['label']
 
     for available_resource_filter in available_resource_filters:
         if available_resource_filter in request_data:
             value = request_data.get(available_resource_filter)
-            if value.lower() == 'false':
-                resource_filter[available_resource_filter] = False
-            else:
-                resource_filter[available_resource_filter] = True
+            if available_resource_filter == 'is_active':
+                if value.lower() == 'false':
+                    resource_filter[available_resource_filter] = False
+                else:
+                    resource_filter[available_resource_filter] = True
+            elif available_resource_filter == 'type':
+                resource_filter[available_resource_filter] = value
 
     search_filter = Q()
     for available_resource_search_filter in available_resource_search_filters:
         if available_resource_search_filter in request_data:
             value = request_data.get(available_resource_search_filter)
-            if available_resource_search_filter == 'name':
-                search_filter = Q(name__icontains=value)
+            if available_resource_search_filter == 'label':
+                search_filter = Q(label__icontains=value)
 
     return resource_filter, search_filter
 
 
+def user_group_filters_from_request(request_data):
+    user_group_filter = {}
+    available_user_group_filters = ['is_active']
+    available_user_group_search_filters = ['label']
+
+    for available_user_group_filter in available_user_group_filters:
+        if available_user_group_filter in request_data:
+            value = request_data.get(available_user_group_filter)
+            if value.lower() == 'false':
+                user_group_filter[available_user_group_filter] = False
+            else:
+                user_group_filter[available_user_group_filter] = True
+
+    search_filter = Q()
+    for available_user_group_search_filter in available_user_group_search_filters:
+        if available_user_group_search_filter in request_data:
+            value = request_data.get(available_user_group_search_filter)
+            if available_user_group_search_filter == 'label':
+                search_filter = Q(label__icontains=value)
+
+    return user_group_filter, search_filter
+
+
+def convert_validation_error_into_response_error(validation_error):
+    return {'password':validation_error}

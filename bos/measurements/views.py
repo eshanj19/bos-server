@@ -66,7 +66,6 @@ class MeasurementViewSet(ViewSet):
             return Response(e.errors, status=400)
 
 
-
     def retrieve(self, request, pk=None):
         queryset = Measurement.objects.all()
         item = get_object_or_404(queryset, key=pk)
@@ -91,18 +90,6 @@ class MeasurementViewSet(ViewSet):
             return Response(status=404)
         item.delete()
         return Response(status=204)
-
-    @action(detail=False,methods=['GET'])
-    def athlete_baseline(self,request):
-        queryset = Measurement.objects.filter(type__label=DefaultMeasurementType.STUDENT_BASELINE.value,ngo=request.user.ngo)
-        serializer = MeasurementSerializer(queryset, many=True)
-        return Response(serializer.data)\
-
-    @action(detail=False,methods=['GET'])
-    def coach_baseline(self,request):
-        queryset = Measurement.objects.filter(type__label=DefaultMeasurementType.COACH_BASELINE.value,ngo=request.user.ngo)
-        serializer = MeasurementSerializer(queryset, many=True)
-        return Response(serializer.data)
 
 
 class MeasurementTypeViewSet(ViewSet):

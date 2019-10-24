@@ -16,6 +16,8 @@
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
@@ -27,11 +29,13 @@ from rest_framework.viewsets import ViewSet
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST, DefaultMeasurementType
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.utils import user_filters_from_request, get_ngo_group_name
+from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
+    convert_validation_error_into_response_error
 from measurements.models import Measurement
-from users.models import User, UserReading
+from users.models import User, UserReading, UserGroup
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
-    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer, PermissionGroupSerializer
+    UserReadingSerializer, UserReadingReadOnlySerializer, CoachSerializer, PermissionGroupSerializer, \
+    UserGroupReadOnlySerializer, AdminSerializer
 
 
 class UserViewSet(ViewSet):
@@ -100,20 +104,39 @@ class AdminViewSet(ViewSet):
             queryset = queryset.order_by(ordering)
         paginator = BOSPageNumberPagination()
         result = paginator.paginate_queryset(queryset, request)
-        serializer = UserSerializer(result, many=True)
+        serializer = AdminSerializer(result, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        create_data = request.data.copy()
+        create_data['ngo'] = request.user.ngo.key
+        password = request.data.get('password')
+        confirm_password = request.data.get('confirm_password')
+        try:
+            with transaction.atomic():
+                validate_password(password)
+                validate_password(confirm_password)
+                if confirm_password != password:
+                    raise ValidationException({"errors":[{'password':'Passwords do not match'}]})
+                serializer = AdminSerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                admin = serializer.save()
+                admin.set_password(password)
+                admin.save()
+
+                return Response(serializer.data, status=201)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+        except ValidationError as e:
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
 
     def retrieve(self, request, pk=None):
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
-        serializer = UserSerializer(item)
+        serializer = AdminSerializer(item)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
@@ -121,7 +144,7 @@ class AdminViewSet(ViewSet):
             item = User.objects.get(key=pk)
         except User.DoesNotExist:
             return Response(status=404)
-        serializer = UserSerializer(item, data=request.data)
+        serializer = AdminSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -157,23 +180,21 @@ class AthleteViewSet(ViewSet):
     def create(self, request):
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-        print(create_data)
+        resource = request.data.get('resource', None)
         try:
             with transaction.atomic():
                 serializer = AthleteSerializer(data=create_data)
                 if not serializer.is_valid():
-                    print(serializer.errors)
-                    raise DatabaseError
+                    raise ValidationException(serializer.errors)
 
                 athlete = serializer.save()
                 baselines = create_data["baselines"]
                 for baseline in baselines:
-                    print(baseline)
-
                     user_reading_data = {}
                     user_reading_data['user'] = athlete.key
                     user_reading_data['ngo'] = request.user.ngo.key
                     user_reading_data['by_user'] = request.user.key
+                    user_reading_data['resource'] = resource
                     user_reading_data['entered_by'] = request.user.key
                     user_reading_data['measurement'] = baseline['key']
                     if baseline['input_type'] == Measurement.BOOLEAN:
@@ -186,14 +207,15 @@ class AthleteViewSet(ViewSet):
                         user_reading_data['value'] = baseline['value']
                     user_reading_serializer = UserReadingSerializer(data=user_reading_data)
                     if not user_reading_serializer.is_valid():
-                        print(user_reading_serializer.errors)
-                        raise DatabaseError
+                        raise ValidationException(user_reading_serializer.errors)
                     _ = user_reading_serializer.save()
 
                 return Response(serializer.data, status=201)
 
         except DatabaseError:
-            return Response(status=400)
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(status=400, data=e.errors)
 
     def retrieve(self, request, pk=None):
         queryset = User.objects.all()
@@ -219,18 +241,6 @@ class AthleteViewSet(ViewSet):
             return Response(status=404)
         item.delete()
         return Response(status=204)
-
-    @action(detail=True)
-    def baseline(self, request, pk=None):
-        try:
-            athlete = User.objects.get(key=pk)
-        except User.DoesNotExist:
-            return Response(status=404)
-
-        queryset = UserReading.objects.filter(user=athlete,
-                                              measurement__type__label=DefaultMeasurementType.STUDENT_BASELINE.value)
-        serializer = UserReadingReadOnlySerializer(queryset, many=True)
-        return Response(serializer.data)
 
 
 class CoachViewSet(ViewSet):
@@ -255,21 +265,20 @@ class CoachViewSet(ViewSet):
     def create(self, request):
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-        print(create_data)
+        resource = request.data.get('resource',None)
         try:
             with transaction.atomic():
                 serializer = CoachSerializer(data=create_data)
                 if not serializer.is_valid():
-                    print(serializer.errors)
-                    raise DatabaseError
+                    raise ValidationException(serializer.errors)
 
-                athlete = serializer.save()
+                # TODO validate measurements belong to the same ngo
+                coach = serializer.save()
                 baselines = create_data["baselines"]
                 for baseline in baselines:
-                    print(baseline)
-
                     user_reading_data = {}
-                    user_reading_data['user'] = athlete.key
+                    user_reading_data['user'] = coach.key
+                    user_reading_data['resource'] = resource
                     user_reading_data['ngo'] = request.user.ngo.key
                     user_reading_data['by_user'] = request.user.key
                     user_reading_data['entered_by'] = request.user.key
@@ -284,14 +293,15 @@ class CoachViewSet(ViewSet):
                         user_reading_data['value'] = baseline['value']
                     user_reading_serializer = UserReadingSerializer(data=user_reading_data)
                     if not user_reading_serializer.is_valid():
-                        print(user_reading_serializer.errors)
-                        raise DatabaseError
+                        raise ValidationException(user_reading_serializer.errors)
                     _ = user_reading_serializer.save()
 
                 return Response(serializer.data, status=201)
 
         except DatabaseError:
-            return Response(status=400)
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(status=400, data=e.errors)
 
     def retrieve(self, request, pk=None):
         queryset = User.objects.all()
@@ -318,17 +328,67 @@ class CoachViewSet(ViewSet):
         item.delete()
         return Response(status=204)
 
-    @action(detail=True)
-    def baseline(self, request, pk=None):
-        try:
-            coach = User.objects.get(key=pk)
-        except User.DoesNotExist:
-            return Response(status=404)
 
-        queryset = UserReading.objects.filter(user=coach,
-                                              measurement__type__label=DefaultMeasurementType.COACH_BASELINE.value)
-        serializer = UserReadingReadOnlySerializer(queryset, many=True)
+class UserGroupViewSet(ViewSet):
+
+    def list(self, request):
+        user_group_filters, search_filters = user_group_filters_from_request(request.GET)
+        ordering = request.GET.get('ordering', None)
+        common_filters = {
+            'ngo': request.user.ngo,
+        }
+        filters = {**common_filters, **user_group_filters}
+
+        queryset = UserGroup.objects.filter(search_filters, **filters)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        paginator = BOSPageNumberPagination()
+        result = paginator.paginate_queryset(queryset, request)
+        serializer = UserGroupReadOnlySerializer(result, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def create(self, request):
+        #  TODO validation users belong to the same ngo
+        create_data = request.data.copy()
+        create_data['ngo'] = request.user.ngo.key
+        try:
+            with transaction.atomic():
+                serializer = UserGroupReadOnlySerializer(data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                _ = serializer.save()
+                return Response(serializer.data, status=201)
+
+        except DatabaseError:
+            return Response(status=500)
+        except ValidationException as e:
+            return Response(data=e.errors, status=400)
+
+    def retrieve(self, request, pk=None):
+        queryset = UserGroup.objects.all()
+        item = get_object_or_404(queryset, key=pk)
+        serializer = UserGroupReadOnlySerializer(item)
         return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        try:
+            item = UserGroup.objects.get(key=pk)
+        except UserGroup.DoesNotExist:
+            return Response(status=404)
+        serializer = UserGroupReadOnlySerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def destroy(self, request, pk=None):
+        try:
+            item = UserGroup.objects.get(key=pk)
+        except UserGroup.DoesNotExist:
+            return Response(status=404)
+        item.delete()
+        return Response(status=204)
 
 
 @api_view(['POST'])
@@ -396,12 +456,12 @@ class PermissionGroupViewSet(ViewSet):
     def create(self, request):
         # TODO check if ngo is null
         ngo = request.user.ngo
-        name = request.data.get('name',None)
-        permissions = request.data.get('permissions',None)
+        name = request.data.get('name', None)
+        permissions = request.data.get('permissions', None)
         if not name:
             return Response(status=400)
         create_data = request.data.copy()
-        create_data['name'] = get_ngo_group_name(ngo,name)
+        create_data['name'] = get_ngo_group_name(ngo, name)
 
         try:
             with transaction.atomic():

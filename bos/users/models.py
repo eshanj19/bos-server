@@ -21,7 +21,7 @@ from django.utils.crypto import get_random_string
 from django.utils.translation import gettext as _
 
 from bos.constants import PUBLIC_KEY_LENGTH_USER, LENGTH_TOKEN, LENGTH_RESET_PASSWORD_TOKEN, FIELD_LENGTH_NAME, \
-    LENGTH_USERNAME, PUBLIC_KEY_LENGTH_USER_READING
+    LENGTH_USERNAME, PUBLIC_KEY_LENGTH_USER_READING, PUBLIC_KEY_LENGTH_USER_GROUP, LENGTH_LABEL
 from bos.permissions import PERMISSION_BOS_ADMIN
 
 
@@ -31,6 +31,10 @@ def generate_user_key():
 
 def generate_user_reading_key():
     return get_random_string(PUBLIC_KEY_LENGTH_USER_READING)
+
+
+def generate_user_group_key():
+    return get_random_string(PUBLIC_KEY_LENGTH_USER_GROUP)
 
 
 def generate_user_auth_token():
@@ -115,9 +119,9 @@ class UserReading(models.Model):
                                    related_name='entered_by')
     measurement = models.ForeignKey('measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
     resource = models.ForeignKey('resources.Resource', related_name='resource', null=True, blank=True,
-                                               on_delete=models.PROTECT)
+                                 on_delete=models.PROTECT)
     resource_session = models.ForeignKey('resources.Resource', related_name='resource_session', null=True,
-                                                       blank=True, on_delete=models.PROTECT)
+                                         blank=True, on_delete=models.PROTECT)
     resource_session_uuid = models.CharField(max_length=100, null=True, blank=True)
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
@@ -167,4 +171,15 @@ class UserResource(models.Model):
         unique_together = ('user', 'resource')
 
 
+class UserGroup(models.Model):
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_GROUP, default=generate_user_group_key, unique=True)
+    label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
+    users = models.ManyToManyField('users.User', blank=False)
+    resources = models.ManyToManyField('resources.Resource', blank=False)
+    ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True, blank=True)
+    creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    last_modification_time = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table = 'user_groups'

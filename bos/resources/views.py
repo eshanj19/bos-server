@@ -17,8 +17,10 @@ from django.db import transaction
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
+from rest_framework.decorators import action
 from rest_framework.viewsets import ViewSet
 
+from bos.constants import METHOD_POST
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.utils import resource_filters_from_request
@@ -90,5 +92,27 @@ class ResourceViewSet(ViewSet):
         except Resource.DoesNotExist:
             return Response(status=404)
         item.delete()
+        return Response(status=204)
+
+    @action(detail=True,methods=[METHOD_POST])
+    def deactivate(self, request, pk=None):
+        ngo = request.user.ngo
+        try:
+            item = Resource.objects.get(key=pk,ngo=ngo)
+        except Resource.DoesNotExist:
+            return Response(status=404)
+        item.is_active = False
+        item.save()
+        return Response(status=204)
+
+    @action(detail=True,methods=[METHOD_POST])
+    def activate(self, request, pk=None):
+        ngo = request.user.ngo
+        try:
+            item = Resource.objects.get(key=pk, ngo=ngo)
+        except Resource.DoesNotExist:
+            return Response(status=404)
+        item.is_active = True
+        item.save()
         return Response(status=204)
 
