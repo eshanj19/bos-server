@@ -159,7 +159,7 @@ class UserReading(models.Model):
 
 
 class UserHierarchy(models.Model):
-    parent_user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT,
+    parent_user = models.ForeignKey('users.User', null=True, blank=False, on_delete=models.PROTECT,
                                     related_name="parent_user")
     child_user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT,
                                    related_name="child_user")

@@ -127,6 +127,16 @@ class UserHierarchySerializer(ModelSerializer):
         exclude = ('id',)
 
 
+class UserHierarchyWriteSerializer(ModelSerializer):
+    parent_user = SlugRelatedField(slug_field='key', queryset=User.objects.all(),
+                                   required=False,allow_null=True,write_only=True)
+    child_user = SlugRelatedField(slug_field='key', queryset=User.objects.all(),write_only=True)
+
+    class Meta:
+        model = UserHierarchy
+        exclude = ('id',)
+
+
 class PermissionSerializer(ModelSerializer):
     class Meta:
         model = Permission

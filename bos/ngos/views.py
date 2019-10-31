@@ -16,6 +16,7 @@
 
 from django.contrib.auth.models import Group, Permission
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import action
@@ -37,7 +38,8 @@ from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, N
 from resources.models import Resource
 from resources.serializers import ResourceSerializer
 from users.models import User, UserHierarchy
-from users.serializers import UserSerializer, PermissionGroupSerializer
+from users.serializers import UserSerializer, PermissionGroupSerializer, UserHierarchySerializer, \
+    UserHierarchyWriteSerializer
 
 
 class NGOViewSet(ViewSet):
@@ -373,21 +375,70 @@ class NGOViewSet(ViewSet):
             user = {}
             user['key'] = active_user.key
             user['label'] = active_user.full_name
-            parent_user = UserHierarchy.objects.filter(parent_user__is_active=True,
+            parent_user_user_hierarchy = UserHierarchy.objects.filter(parent_user__is_active=True,
                 child_user=active_user).first()
-            if parent_user:
-                user['parent_node'] = parent_user.key
+            if parent_user_user_hierarchy:
+                user['parent_node'] = parent_user_user_hierarchy.parent_user.key
             else:
                 user['parent_node'] = None
-            child_users = UserHierarchy.objects.filter(child_user__is_active=True,
+            child_user_user_hierarchies = UserHierarchy.objects.filter(child_user__is_active=True,
                 parent_user=active_user)
             child_user_keys = []
-            for child_user in child_users:
-                child_user_keys.append(child_user.key)           
+            for child_user_user_hierarchy in child_user_user_hierarchies:
+                child_user_keys.append(child_user_user_hierarchy.child_user.key)
             user['children'] = child_user_keys
             response_data.append(user)
         return Response(response_data)
 
+    @action(detail=True, methods=[METHOD_POST])
+    def save_user_hierarchy(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        try:
+            with transaction.atomic():
+                # TODO clean all UserHierarchy objects for ngo
+                ngo_filter = Q(parent_user__ngo=ngo) | Q(child_user__ngo=ngo)
+                UserHierarchy.objects.filter(ngo_filter).delete()
+
+                # TODO Check for cycle in binary tree.
+                hierarchy_data = request.data.copy()
+                for node in hierarchy_data:
+                    parent_to_child(node)
+
+        except ValidationException as e:
+            return Response(e.errors,status=400)
+        return Response(status=201)
+
+
+def parent_to_child(hierarchy_data):
+    parent_key = hierarchy_data.get('key',None)
+    children = hierarchy_data.get('children',[])
+    children_keys = []
+    for child in children:
+        child_key = child.get('key',None)
+        if not child_key:
+            print("Child key is None")
+            raise ValidationException()
+
+        children_keys.append(child_key)
+
+    if parent_key == 'ghost_node':
+        parent_key = None
+
+        # Write to user hierarchy
+    for child_key in children_keys:
+        create_data = {'parent_user': parent_key, 'child_user': child_key}
+        print(create_data)
+        serializer = UserHierarchyWriteSerializer(data=create_data)
+        if not serializer.is_valid():
+            raise ValidationException(serializer.errors)
+        serializer.save()
+
+    for child in children:
+        parent_to_child(child)
 
 class PingViewSet(ViewSet):
 

@@ -13,6 +13,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import json
+
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404
 
@@ -50,7 +53,17 @@ class ResourceViewSet(ViewSet):
     def create(self, request):
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-        print(create_data)
+
+        type = request.data.get('type', None)
+        if type == Resource.FILE:
+            #  Saving POST'ed file to storage
+            file = request.FILES['file']
+            file_name = default_storage.save(file.name, file)
+
+            #  Reading file from storage
+            file = default_storage.open(file_name)
+            file_url = default_storage.url(file_name)
+            create_data['data'] = json.dumps({'url':file_url})
         try:
             with transaction.atomic():
                 serializer = ResourceSerializer(data=create_data)
@@ -94,18 +107,18 @@ class ResourceViewSet(ViewSet):
         item.delete()
         return Response(status=204)
 
-    @action(detail=True,methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST])
     def deactivate(self, request, pk=None):
         ngo = request.user.ngo
         try:
-            item = Resource.objects.get(key=pk,ngo=ngo)
+            item = Resource.objects.get(key=pk, ngo=ngo)
         except Resource.DoesNotExist:
             return Response(status=404)
         item.is_active = False
         item.save()
         return Response(status=204)
 
-    @action(detail=True,methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST])
     def activate(self, request, pk=None):
         ngo = request.user.ngo
         try:
@@ -115,4 +128,3 @@ class ResourceViewSet(ViewSet):
         item.is_active = True
         item.save()
         return Response(status=204)
-
