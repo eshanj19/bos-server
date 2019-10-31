@@ -67,11 +67,16 @@ class User(AbstractUser):
         (COACH, 'coach')
     )
 
-    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER, default=generate_user_key, unique=True)
-    first_name = models.CharField(max_length=FIELD_LENGTH_NAME, null=False, blank=False)
-    middle_name = models.CharField(max_length=FIELD_LENGTH_NAME, null=True, blank=True)
-    last_name = models.CharField(max_length=FIELD_LENGTH_NAME, null=False, blank=False)
-    ngo = models.ForeignKey('ngos.NGO', null=True, blank=True, on_delete=models.PROTECT)
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER,
+                           default=generate_user_key, unique=True)
+    first_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=False, blank=False)
+    middle_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=True, blank=True)
+    last_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=False, blank=False)
+    ngo = models.ForeignKey('ngos.NGO', null=True,
+                            blank=True, on_delete=models.PROTECT)
     email = models.CharField(max_length=255,
                              unique=True,
                              null=True,
@@ -81,8 +86,10 @@ class User(AbstractUser):
                              })
     password = models.CharField(max_length=1024, null=True, blank=True)
     is_active = models.BooleanField(default=True, blank=True)
-    role = models.CharField(max_length=10, choices=ROLES, null=False, blank=False)
-    language = models.CharField(max_length=5, choices=LANGUAGES, default=ENGLISH, null=False, blank=True)
+    role = models.CharField(max_length=10, choices=ROLES,
+                            null=False, blank=False)
+    language = models.CharField(
+        max_length=5, choices=LANGUAGES, default=ENGLISH, null=False, blank=True)
     reset_password = models.BooleanField(default=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
@@ -91,6 +98,16 @@ class User(AbstractUser):
     def name(self):
         return ''.join(
             [self.first_name, ' ', self.middle_name, ' ', self.last_name])
+    
+    @property
+    def full_name(self):
+        if self.middle_name:
+            return ''.join(
+                [self.first_name, ' ', self.middle_name, ' ', self.last_name])
+        else:
+            return ''.join(
+                [self.first_name, ' ', self.last_name])
+            
 
     class Meta:
         db_table = 'users'
@@ -100,8 +117,10 @@ class User(AbstractUser):
 
 
 class MobileAuthToken(models.Model):
-    token = models.CharField(max_length=LENGTH_TOKEN, default=generate_user_auth_token, unique=True)
-    user = models.ForeignKey('users.User', null=True, blank=False, on_delete=models.PROTECT)
+    token = models.CharField(max_length=LENGTH_TOKEN,
+                             default=generate_user_auth_token, unique=True)
+    user = models.ForeignKey('users.User', null=True,
+                             blank=False, on_delete=models.PROTECT)
     expiry_date = models.DateTimeField(null=False, blank=False)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
@@ -111,18 +130,24 @@ class MobileAuthToken(models.Model):
 
 
 class UserReading(models.Model):
-    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_READING, default=generate_user_reading_key, unique=True)
-    user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT, related_name="user")
-    ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
-    by_user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT, related_name='user_by')
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_READING,
+                           default=generate_user_reading_key, unique=True)
+    user = models.ForeignKey('users.User', null=False, blank=False,
+                             on_delete=models.PROTECT, related_name="user")
+    ngo = models.ForeignKey('ngos.NGO', null=False,
+                            blank=False, on_delete=models.PROTECT)
+    by_user = models.ForeignKey(
+        'users.User', null=False, blank=False, on_delete=models.PROTECT, related_name='user_by')
     entered_by = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT,
                                    related_name='entered_by')
-    measurement = models.ForeignKey('measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
+    measurement = models.ForeignKey(
+        'measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
     resource = models.ForeignKey('resources.Resource', related_name='resource', null=True, blank=True,
                                  on_delete=models.PROTECT)
     resource_session = models.ForeignKey('resources.Resource', related_name='resource_session', null=True,
                                          blank=True, on_delete=models.PROTECT)
-    resource_session_uuid = models.CharField(max_length=100, null=True, blank=True)
+    resource_session_uuid = models.CharField(
+        max_length=100, null=True, blank=True)
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)
@@ -143,10 +168,12 @@ class UserHierarchy(models.Model):
 
     class Meta:
         db_table = 'user_hierarchy'
+        unique_together = ('parent_user', 'child_user')
 
 
 class UserResetPassword(models.Model):
-    user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
+    user = models.ForeignKey('users.User', null=False,
+                             blank=False, on_delete=models.PROTECT)
     reset_password_token = models.CharField(max_length=LENGTH_RESET_PASSWORD_TOKEN, default=generate_user_reset_token,
                                             unique=True)
     is_used = models.BooleanField(default=False)
@@ -159,8 +186,10 @@ class UserResetPassword(models.Model):
 
 
 class UserResource(models.Model):
-    user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
-    resource = models.ForeignKey('resources.Resource', null=False, blank=False, on_delete=models.PROTECT)
+    user = models.ForeignKey('users.User', null=False,
+                             blank=False, on_delete=models.PROTECT)
+    resource = models.ForeignKey(
+        'resources.Resource', null=False, blank=False, on_delete=models.PROTECT)
     data = JSONField()
     is_active = models.BooleanField(default=True, blank=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
@@ -172,11 +201,13 @@ class UserResource(models.Model):
 
 
 class UserGroup(models.Model):
-    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_GROUP, default=generate_user_group_key, unique=True)
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_GROUP,
+                           default=generate_user_group_key, unique=True)
     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
     users = models.ManyToManyField('users.User', blank=False)
     resources = models.ManyToManyField('resources.Resource', blank=False)
-    ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
+    ngo = models.ForeignKey('ngos.NGO', null=False,
+                            blank=False, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True, blank=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)

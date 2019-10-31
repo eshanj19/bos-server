@@ -36,6 +36,7 @@ from ngos.models import NGO, NGORegistrationResource
 from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, NGORegistrationResourceDetailSerializer
 from resources.models import Resource
 from resources.serializers import ResourceSerializer
+from users.models import User, UserHierarchy
 from users.serializers import UserSerializer, PermissionGroupSerializer
 
 
@@ -66,7 +67,8 @@ class NGOViewSet(ViewSet):
                 for measurement_type in DEFAULT_MEASUREMENT_TYPES:
                     measurement_type_data = {"key": generate_measurement_key(), "label": measurement_type,
                                              "ngo": ngo.key, "is_active": True}
-                    serializer = MeasurementTypeSerializer(data=measurement_type_data)
+                    serializer = MeasurementTypeSerializer(
+                        data=measurement_type_data)
                     if not serializer.is_valid():
                         raise ValidationException(serializer.errors)
                     serializer.save()
@@ -86,7 +88,8 @@ class NGOViewSet(ViewSet):
                 }
 
                 if not password or not confirm_password or (password != confirm_password):
-                    raise ValidationException({"password": "Passwords dont match"})
+                    raise ValidationException(
+                        {"password": "Passwords dont match"})
                 serializer = UserSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
@@ -95,13 +98,16 @@ class NGOViewSet(ViewSet):
                 ngo_admin.set_password(password)
                 ngo_admin.save()
 
-                admin_group_name = utils.get_ngo_group_name(ngo_admin, GroupType.ADMIN.value)
-                admin_group, created = Group.objects.get_or_create(name=admin_group_name)
+                admin_group_name = utils.get_ngo_group_name(
+                    ngo_admin, GroupType.ADMIN.value)
+                admin_group, created = Group.objects.get_or_create(
+                    name=admin_group_name)
 
                 ngo_admin.groups.add(admin_group)
                 for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
                     try:
-                        permission = Permission.objects.get(codename=code_name, name=name)
+                        permission = Permission.objects.get(
+                            codename=code_name, name=name)
                         # TODO
                         # ct = ContentType.objects.get_for_model(Project)
                         admin_group.permissions.add(permission)
@@ -192,7 +198,8 @@ class NGOViewSet(ViewSet):
         except NGO.DoesNotExist:
             return Response(status=404)
 
-        queryset = Resource.objects.filter(ngo=ngo, type=Resource.FILE, is_active=True)
+        queryset = Resource.objects.filter(
+            ngo=ngo, type=Resource.FILE, is_active=True)
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -203,7 +210,8 @@ class NGOViewSet(ViewSet):
         except NGO.DoesNotExist:
             return Response(status=404)
 
-        queryset = Resource.objects.filter(ngo=ngo, type=Resource.CURRICULUM, is_active=True)
+        queryset = Resource.objects.filter(
+            ngo=ngo, type=Resource.CURRICULUM, is_active=True)
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -214,7 +222,8 @@ class NGOViewSet(ViewSet):
         except NGO.DoesNotExist:
             return Response(status=404)
 
-        queryset = Resource.objects.filter(ngo=ngo, type=Resource.TRAINING_SESSION, is_active=True)
+        queryset = Resource.objects.filter(
+            ngo=ngo, type=Resource.TRAINING_SESSION, is_active=True)
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -262,7 +271,8 @@ class NGOViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                serializer = NGORegistrationResourceSerializer(data=create_data)
+                serializer = NGORegistrationResourceSerializer(
+                    data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
 
@@ -298,7 +308,8 @@ class NGOViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                serializer = NGORegistrationResourceSerializer(data=create_data)
+                serializer = NGORegistrationResourceSerializer(
+                    data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
 
@@ -324,7 +335,8 @@ class NGOViewSet(ViewSet):
         if ngo != request.user.ngo:
             return Response(status=403)
         try:
-            resource = NGORegistrationResource.objects.get(ngo=ngo, type=NGORegistrationResource.COACH)
+            resource = NGORegistrationResource.objects.get(
+                ngo=ngo, type=NGORegistrationResource.COACH)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 
@@ -340,12 +352,41 @@ class NGOViewSet(ViewSet):
             return Response(status=404)
 
         try:
-            resource = NGORegistrationResource.objects.get(ngo=ngo, type=NGORegistrationResource.ATHLETE)
+            resource = NGORegistrationResource.objects.get(
+                ngo=ngo, type=NGORegistrationResource.ATHLETE)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 
         serializer = NGORegistrationResourceDetailSerializer(resource)
         return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET])
+    def user_hierarchy(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+
+        response_data = []
+        active_users = User.objects.filter(ngo=ngo, is_active=True)
+        for active_user in active_users:
+            user = {}
+            user['key'] = active_user.key
+            user['label'] = active_user.full_name
+            parent_user = UserHierarchy.objects.filter(parent_user__is_active=True,
+                child_user=active_user).first()
+            if parent_user:
+                user['parent_node'] = parent_user.key
+            else:
+                user['parent_node'] = None
+            child_users = UserHierarchy.objects.filter(child_user__is_active=True,
+                parent_user=active_user)
+            child_user_keys = []
+            for child_user in child_users:
+                child_user_keys.append(child_user.key)           
+            user['children'] = child_user_keys
+            response_data.append(user)
+        return Response(response_data)
 
 
 class PingViewSet(ViewSet):

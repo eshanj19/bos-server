@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging.config
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,10 +29,11 @@ SECRET_KEY = '$p=crriv*jat1*fa4(s3e7#vzvh1^voe53280z^1wqggsbd-%8'
 DEBUG = True
 
 # HOST_IP = '192.168.0.105'
-HOST_IP = '192.168.0.8'
+HOST_IP = '192.168.0.169'
 # HOST_IP = '192.168.1.100'
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.86.224'
+# HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.1.100'
 HOST_IP_PORT = HOST_IP + ':3000'
@@ -54,6 +56,8 @@ INSTALLED_APPS = [
     'users',
     'resources',
 ]
+
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -185,7 +189,6 @@ CSRF_COOKIE_DOMAIN = HOST_IP_PORT
 
 # LOGGING
 LOGGING_CONFIG = None
-import logging.config
 
 logging.config.dictConfig({
     'version': 1,
