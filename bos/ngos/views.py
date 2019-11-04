@@ -381,6 +381,7 @@ class NGOViewSet(ViewSet):
         active_users = User.objects.filter(ngo=ngo, is_active=True)
         ghost_node = {}
         ghost_node['key'] = "ghost_node"
+        ghost_node['parent_node'] = None
         ghost_node['label'] = "Ghost node"
         ghost_node_children = []
         for active_user in active_users:
@@ -403,9 +404,10 @@ class NGOViewSet(ViewSet):
             response_data.append(user)
 
             if user['parent_node'] is None and len(user['children']) != 0:
-                ghost_node['children'].append(active_user.key)
+                ghost_node_children.append(active_user.key)
 
         ghost_node['children'] = ghost_node_children
+        response_data.append(ghost_node)
 
         return Response(response_data)
 
@@ -415,7 +417,7 @@ class NGOViewSet(ViewSet):
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
             return Response(status=404)
-
+        
         try:
             with transaction.atomic():
                 # TODO clean all UserHierarchy objects for ngo
@@ -429,7 +431,7 @@ class NGOViewSet(ViewSet):
 
         except ValidationException as e:
             return Response(e.errors, status=400)
-        return Response(status=201)
+        return Response(status=201,data={'message':'Org updated'})
 
 
 def parent_to_child(hierarchy_data):
