@@ -233,6 +233,7 @@ class NGOViewSet(ViewSet):
     def active_ngos(self, request, pk=None):
         ngos = NGO.objects.filter(is_active=True)
         serializer = NGOSerializer(ngos, many=True)
+        return Resource(status=400)
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
@@ -378,6 +379,10 @@ class NGOViewSet(ViewSet):
 
         response_data = []
         active_users = User.objects.filter(ngo=ngo, is_active=True)
+        ghost_node = {}
+        ghost_node['key'] = "ghost_node"
+        ghost_node['label'] = "Ghost node"
+        ghost_node_children = []
         for active_user in active_users:
             user = {}
             user['key'] = active_user.key
@@ -395,6 +400,12 @@ class NGOViewSet(ViewSet):
                 child_user_keys.append(child_user_user_hierarchy.child_user.key)
             user['children'] = child_user_keys
             response_data.append(user)
+
+            if user['parent_node'] is None and len(user['children']) != 0:
+                ghost_node['children'].append(active_user.key)
+
+        ghost_node['children'] = ghost_node_children
+
         return Response(response_data)
 
     @action(detail=True, methods=[METHOD_POST])
