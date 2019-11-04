@@ -233,6 +233,7 @@ class NGOViewSet(ViewSet):
     def active_ngos(self, request, pk=None):
         ngos = NGO.objects.filter(is_active=True)
         serializer = NGOSerializer(ngos, many=True)
+        return Resource(status=400)
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
@@ -242,6 +243,13 @@ class NGOViewSet(ViewSet):
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
             return Response(status=404)
+
+        try:
+            ngo_registration_resource = NGORegistrationResource.objects.get(ngo=ngo, type=NGORegistrationResource.COACH)
+        except NGORegistrationResource.DoesNotExist:
+            return Response(status=404)
+
+        serializer = NGORegistrationResourceDetailSerializer(ngo_registration_resource)
         json = {
             "label": "Coach registration form",
             "type": Resource.TRAINING_SESSION,
@@ -254,7 +262,7 @@ class NGOViewSet(ViewSet):
             ]
 
         }
-        return Response(data=json)
+        return Response(data=serializer.data.get('resource'))
 
     @action(detail=True, methods=[METHOD_POST])
     def mark_as_coach_registration_resource(self, request, pk=None):
@@ -371,24 +379,34 @@ class NGOViewSet(ViewSet):
 
         response_data = []
         active_users = User.objects.filter(ngo=ngo, is_active=True)
+        ghost_node = {}
+        ghost_node['key'] = "ghost_node"
+        ghost_node['label'] = "Ghost node"
+        ghost_node_children = []
         for active_user in active_users:
             user = {}
             user['key'] = active_user.key
             user['role'] = active_user.role
             user['label'] = active_user.full_name
             parent_user_user_hierarchy = UserHierarchy.objects.filter(parent_user__is_active=True,
-                child_user=active_user).first()
+                                                                      child_user=active_user).first()
             if parent_user_user_hierarchy:
                 user['parent_node'] = parent_user_user_hierarchy.parent_user.key
             else:
                 user['parent_node'] = None
             child_user_user_hierarchies = UserHierarchy.objects.filter(child_user__is_active=True,
-                parent_user=active_user)
+                                                                       parent_user=active_user)
             child_user_keys = []
             for child_user_user_hierarchy in child_user_user_hierarchies:
                 child_user_keys.append(child_user_user_hierarchy.child_user.key)
             user['children'] = child_user_keys
             response_data.append(user)
+
+            if user['parent_node'] is None and len(user['children']) != 0:
+                ghost_node['children'].append(active_user.key)
+
+        ghost_node['children'] = ghost_node_children
+
         return Response(response_data)
 
     @action(detail=True, methods=[METHOD_POST])
@@ -410,16 +428,16 @@ class NGOViewSet(ViewSet):
                     parent_to_child(node)
 
         except ValidationException as e:
-            return Response(e.errors,status=400)
+            return Response(e.errors, status=400)
         return Response(status=201)
 
 
 def parent_to_child(hierarchy_data):
-    parent_key = hierarchy_data.get('key',None)
-    children = hierarchy_data.get('children',[])
+    parent_key = hierarchy_data.get('key', None)
+    children = hierarchy_data.get('children', [])
     children_keys = []
     for child in children:
-        child_key = child.get('key',None)
+        child_key = child.get('key', None)
         if not child_key:
             print("Child key is None")
             raise ValidationException()
@@ -440,6 +458,7 @@ def parent_to_child(hierarchy_data):
 
     for child in children:
         parent_to_child(child)
+
 
 class PingViewSet(ViewSet):
 

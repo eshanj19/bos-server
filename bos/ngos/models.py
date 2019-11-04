@@ -58,6 +58,7 @@ class NGORegistrationResource(models.Model):
 
     class Meta:
         db_table = 'ngo_registration_resource'
+        unique_together = ('ngo', 'type')
 
     def __str__(self):
         return self.label
