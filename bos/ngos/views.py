@@ -374,6 +374,7 @@ class NGOViewSet(ViewSet):
         for active_user in active_users:
             user = {}
             user['key'] = active_user.key
+            user['role'] = active_user.role
             user['label'] = active_user.full_name
             parent_user_user_hierarchy = UserHierarchy.objects.filter(parent_user__is_active=True,
                 child_user=active_user).first()
