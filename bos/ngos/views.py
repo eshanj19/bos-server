@@ -353,6 +353,23 @@ class NGOViewSet(ViewSet):
         serializer = NGORegistrationResourceDetailSerializer(resource)
         return Response(serializer.data)
 
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def all_resources(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+        if ngo != request.user.ngo:
+            return Response(status=403)
+        try:
+            resources = Resource.objects.filter(
+                ngo=ngo)
+        except Resource.DoesNotExist:
+            return Response(status=404)
+
+        serializer = ResourceSerializer(resources,many=True)
+        return Response(serializer.data)
+
     # TODO permissions
     @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
     def athlete_registration_resource(self, request, pk=None):
