@@ -32,7 +32,7 @@ from bos.pagination import BOSPageNumberPagination
 from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
-from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
+from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer, MeasurementDetailSerializer
 from ngos.models import NGO, NGORegistrationResource
 from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, NGORegistrationResourceDetailSerializer
 from resources.models import Resource
@@ -233,7 +233,6 @@ class NGOViewSet(ViewSet):
     def active_ngos(self, request, pk=None):
         ngos = NGO.objects.filter(is_active=True)
         serializer = NGOSerializer(ngos, many=True)
-        return Resource(status=400)
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
@@ -417,7 +416,7 @@ class NGOViewSet(ViewSet):
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
             return Response(status=404)
-        
+
         try:
             with transaction.atomic():
                 # TODO clean all UserHierarchy objects for ngo
@@ -431,7 +430,20 @@ class NGOViewSet(ViewSet):
 
         except ValidationException as e:
             return Response(e.errors, status=400)
-        return Response(status=201,data={'message':'Org updated'})
+        return Response(status=201, data={'message': 'Org updated'})
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[AllowAny])
+    def measurements_from_keys(self, request, pk=None):
+        # TODO
+
+        print(request.data)
+        measurement_keys = request.data.copy()
+        if measurement_keys is None or len(measurement_keys) == 0:
+            return Response(status=400)
+
+        queryset = Measurement.objects.filter(key__in=measurement_keys,is_active=True)
+        serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
+        return Response(data=serializer.data)
 
 
 def parent_to_child(hierarchy_data):

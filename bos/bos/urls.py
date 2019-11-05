@@ -42,5 +42,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^login', user_views.login_view, name='login'),
     url(r'^logout', user_views.logout_view, name='logout'),
+    url(r'^is_authenticated', user_views.is_authenticated, name='is_user_authenticated'),
+
 ]
 

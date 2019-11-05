@@ -117,7 +117,7 @@ class AdminViewSet(ViewSet):
                 validate_password(password)
                 validate_password(confirm_password)
                 if confirm_password != password:
-                    raise ValidationException({"errors":[{'password':'Passwords do not match'}]})
+                    raise ValidationException({"errors": [{'password': 'Passwords do not match'}]})
                 serializer = AdminSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
@@ -265,7 +265,7 @@ class CoachViewSet(ViewSet):
     def create(self, request):
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-        resource = request.data.get('resource',None)
+        resource = request.data.get('resource', None)
         try:
             with transaction.atomic():
                 serializer = CoachSerializer(data=create_data)
@@ -536,3 +536,12 @@ class PermissionGroupViewSet(ViewSet):
         queryset = Permission.objects.all().exclude(codename__in=DEFAULT_PERMISSIONS_BLACKLIST)
         serializer = PermissionSerializer(queryset, many=True, read_only=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def is_authenticated(request):
+    if request.user and request.user.is_authenticated:
+        return Response(status=200, data={"is_authenticated": True})
+    else:
+        return Response(status=200, data={"is_authenticated": False})

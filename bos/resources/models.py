@@ -18,6 +18,12 @@ from django.db import models
 from django.utils.crypto import get_random_string
 from django.contrib.postgres.fields import JSONField
 
+from bos.permissions import PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE, PERMISSION_CAN_DESTROY_FILE, \
+    PERMISSION_CAN_VIEW_FILE, PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_CHANGE_CURRICULUM, \
+    PERMISSION_CAN_DESTROY_CURRICULUM, PERMISSION_CAN_VIEW_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, \
+    PERMISSION_CAN_CHANGE_TRAINING_SESSION, PERMISSION_CAN_DESTROY_TRAINING_SESSION, \
+    PERMISSION_CAN_VIEW_TRAINING_SESSION
+
 
 def generate_resource_key():
     return get_random_string(PUBLIC_KEY_LENGTH_RESOURCE)
@@ -52,6 +58,20 @@ class Resource(models.Model):
 
     class Meta:
         db_table = 'resources'
+        permissions = (
+            PERMISSION_CAN_ADD_TRAINING_SESSION[0:2],
+            PERMISSION_CAN_CHANGE_TRAINING_SESSION[0:2],
+            PERMISSION_CAN_DESTROY_TRAINING_SESSION[0:2],
+            PERMISSION_CAN_VIEW_TRAINING_SESSION[0:2],
+            PERMISSION_CAN_ADD_FILE[0:2],
+            PERMISSION_CAN_CHANGE_FILE[0:2],
+            PERMISSION_CAN_DESTROY_FILE[0:2],
+            PERMISSION_CAN_VIEW_FILE[0:2],
+            PERMISSION_CAN_ADD_CURRICULUM[0:2],
+            PERMISSION_CAN_CHANGE_CURRICULUM[0:2],
+            PERMISSION_CAN_DESTROY_CURRICULUM[0:2],
+            PERMISSION_CAN_VIEW_CURRICULUM[0:2],
+        )
 
     def __str__(self):
         return self.label

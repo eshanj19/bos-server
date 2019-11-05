@@ -16,11 +16,9 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from bos.defaults import DefaultMeasurementType
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_MEASUREMENT
@@ -32,7 +30,7 @@ from measurements.serializers import MeasurementSerializer, MeasurementTypeSeria
 class MeasurementViewSet(ViewSet):
 
     def list(self, request):
-        if not has_permission(request,PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
             return Response(status=403)
         measurement_filters, search_filters = measurement_filters_from_request(request.GET)
         ordering = request.GET.get('ordering', None)
@@ -64,7 +62,6 @@ class MeasurementViewSet(ViewSet):
             return Response(status=500)
         except ValidationException as e:
             return Response(e.errors, status=400)
-
 
     def retrieve(self, request, pk=None):
         queryset = Measurement.objects.all()
@@ -109,7 +106,6 @@ class MeasurementTypeViewSet(ViewSet):
         result = paginator.paginate_queryset(queryset, request)
         serializer = MeasurementTypeSerializer(result, many=True)
         return paginator.get_paginated_response(serializer.data)
-
 
     def create(self, request):
         create_data = request.data

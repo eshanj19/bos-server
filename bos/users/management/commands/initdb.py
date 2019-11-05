@@ -113,6 +113,7 @@ class Command(BaseCommand):
 
                 admin_group_name = utils.get_ngo_group_name(bos_ngo, GroupType.ADMIN.value)
                 admin_group, created = Group.objects.get_or_create(name=admin_group_name)
+                bos_admin.groups.add(admin_group)
 
                 for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
                     try:
@@ -132,7 +133,7 @@ class Command(BaseCommand):
                 for student_baseline,input_type,uom in DEFAULT_STUDENT_BASELINES:
                     try:
                         _ = Measurement.objects.get(label=student_baseline,
-                                                    type=student_baseline_measurement_type)
+                                                    types=student_baseline_measurement_type)
                     except Measurement.DoesNotExist:
 
                         if created:
@@ -143,7 +144,7 @@ class Command(BaseCommand):
                                 'label': student_baseline,
                                 'key': generate_measurement_key(),
                                 'uom': "",
-                                'type': student_baseline_measurement_type.key,
+                                'types': [student_baseline_measurement_type.key],
                                 'input_type': input_type,
                                 'ngo': bos_ngo.key,
                                 'is_active': True
@@ -167,7 +168,7 @@ class Command(BaseCommand):
                 for student_progression,input_type,uom in DEFAULT_STUDENT_PROGRESSIONS:
                     try:
                         _ = Measurement.objects.get(label=student_progression,
-                                                    type=student_progression_measurement_type)
+                                                    types=student_progression_measurement_type)
                     except Measurement.DoesNotExist:
 
                         if created:
@@ -178,7 +179,7 @@ class Command(BaseCommand):
                                 'label': student_progression,
                                 'key': generate_measurement_key(),
                                 'uom': "",
-                                'type': student_progression_measurement_type.key,
+                                'types': [student_progression_measurement_type.key],
                                 'input_type': input_type,
                                 'ngo': bos_ngo.key,
                                 'is_active': True
@@ -202,7 +203,7 @@ class Command(BaseCommand):
                 for coach_baseline,input_type,uom in DEFAULT_COACH_BASELINES:
                     try:
                         _ = Measurement.objects.get(label=coach_baseline,
-                                                    type=coach_baseline_measurement_type)
+                                                    types=coach_baseline_measurement_type)
                     except Measurement.DoesNotExist:
 
                         if created:
@@ -213,7 +214,7 @@ class Command(BaseCommand):
                                 'label': coach_baseline,
                                 'key': generate_measurement_key(),
                                 'uom': "",
-                                'type': coach_baseline_measurement_type.key,
+                                'types': [coach_baseline_measurement_type.key],
                                 'input_type': input_type,
                                 'ngo': bos_ngo.key,
                                 'is_active': True

@@ -24,7 +24,7 @@ class MeasurementSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
     ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
-    types = SlugRelatedField(slug_field='key', queryset=MeasurementType.objects.all(),many=True)
+    types = SlugRelatedField(slug_field='key', queryset=MeasurementType.objects.all(), many=True)
 
     class Meta:
         model = Measurement
@@ -40,3 +40,12 @@ class MeasurementTypeSerializer(ModelSerializer):
         model = MeasurementType
         exclude = ('id',)
 
+
+class MeasurementDetailSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    type = MeasurementTypeSerializer(read_only=True)
+
+    class Meta:
+        model = Measurement
+        exclude = ('id',)
