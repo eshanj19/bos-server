@@ -24,9 +24,6 @@ def generate_measurement_key():
     return get_random_string(PUBLIC_KEY_LENGTH_MEASUREMENT)
 
 
-# Should measurements label be language specific?
-
-
 class Measurement(models.Model):
     TEXT = 'text'
     NUMERIC = 'numeric'

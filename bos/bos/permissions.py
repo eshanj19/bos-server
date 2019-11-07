@@ -139,10 +139,22 @@ PERMISSIONS_CUSTOM_USER_GROUP = [PERMISSION_CAN_ADD_CUSTOM_USER_GROUP, PERMISSIO
                                  PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP,
                                  PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP]
 
+# PERMISSION_GROUPS
+PERMISSION_CAN_ADD_PERMISSION_GROUP = ('add_permissiongroup', 'Can add permissiongroup', 'users.add_permissiongroup')
+PERMISSION_CAN_CHANGE_PERMISSION_GROUP = (
+    'change_permissiongroup', 'Can change permissiongroup', 'users.change_permissiongroup')
+PERMISSION_CAN_DESTROY_PERMISSION_GROUP = (
+    'delete_permissiongroup', 'Can delete permissiongroup', 'users.delete_permissiongroup')
+PERMISSION_CAN_VIEW_PERMISSION_GROUP = (
+    'view_permissiongroup', 'Can view permissiongroup', 'users.view_permissiongroup')
+PERMISSIONS_PERMISSION_GROUP = [PERMISSION_CAN_ADD_PERMISSION_GROUP, PERMISSION_CAN_CHANGE_PERMISSION_GROUP,
+                                PERMISSION_CAN_DESTROY_PERMISSION_GROUP,
+                                PERMISSION_CAN_VIEW_PERMISSION_GROUP]
+
 DEFAULT_PERMISSIONS_ADMIN = PERMISSIONS_PERMISSION + PERMISSIONS_MEASUREMENT + PERMISSIONS_MEASUREMENT_TYPE + \
                             PERMISSIONS_RESOURCE + PERMISSIONS_CURRICULUM + PERMISSIONS_FILE + \
                             PERMISSIONS_TRAINING_SESSION + PERMISSIONS_COACH + PERMISSIONS_ATHLETE + \
-                            PERMISSIONS_ADMIN + PERMISSIONS_CUSTOM_USER_GROUP
+                            PERMISSIONS_ADMIN + PERMISSIONS_CUSTOM_USER_GROUP + PERMISSIONS_PERMISSION_GROUP
 DEFAULT_PERMISSIONS_COACH = []
 
 
@@ -390,3 +402,27 @@ class CanViewCurriculum(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return has_permission(request, PERMISSION_CAN_VIEW_CURRICULUM)
+
+
+class CanAddPermissionGroup(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_PERMISSION_GROUP)
+
+
+class CanChangePermissionGroup(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_PERMISSION_GROUP)
+
+
+class CanDeletePermissionGroup(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_PERMISSION_GROUP)
+
+
+class CanViewPermissionGroup(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_PERMISSION_GROUP)

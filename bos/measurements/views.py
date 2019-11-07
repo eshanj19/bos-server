@@ -32,6 +32,7 @@ class MeasurementViewSet(ViewSet):
     def list(self, request):
         if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
             return Response(status=403)
+
         measurement_filters, search_filters = measurement_filters_from_request(request.GET)
         ordering = request.GET.get('ordering', None)
         common_filters = {
@@ -48,6 +49,9 @@ class MeasurementViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         create_data = request.data
         create_data['ngo'] = request.user.ngo.key
         try:
@@ -70,6 +74,9 @@ class MeasurementViewSet(ViewSet):
         return Response(serializer.data)
 
     def update(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         try:
             item = Measurement.objects.get(key=pk)
         except Measurement.DoesNotExist:
@@ -81,6 +88,9 @@ class MeasurementViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         try:
             item = Measurement.objects.get(key=pk)
         except Measurement.DoesNotExist:
@@ -92,6 +102,9 @@ class MeasurementViewSet(ViewSet):
 class MeasurementTypeViewSet(ViewSet):
 
     def list(self, request):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         measurement_type_filters, search_filters = measurement_type_filters_from_request(request.GET)
         ordering = request.GET.get('ordering', None)
         common_filters = {
@@ -108,6 +121,9 @@ class MeasurementTypeViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         create_data = request.data
         create_data['ngo'] = request.user.ngo.key
         serializer = MeasurementTypeSerializer(data=create_data)
@@ -117,12 +133,18 @@ class MeasurementTypeViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         queryset = MeasurementType.objects.all()
         item = get_object_or_404(queryset, key=pk)
         serializer = MeasurementTypeSerializer(item)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         try:
             item = MeasurementType.objects.get(key=pk)
         except MeasurementType.DoesNotExist:
@@ -134,6 +156,9 @@ class MeasurementTypeViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
+
         try:
             item = MeasurementType.objects.get(key=pk)
         except MeasurementType.DoesNotExist:

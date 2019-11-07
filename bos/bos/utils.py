@@ -15,6 +15,9 @@
 #
 from django.db.models import Q
 
+from bos.constants import MESSAGE_KEY
+from django.utils.translation import gettext as _
+
 
 def get_ngo_group_name(ngo, name):
     return ngo.key + '_' + name
@@ -131,7 +134,7 @@ def ngo_filters_from_request(request_data):
 
 def resource_filters_from_request(request_data):
     resource_filter = {}
-    available_resource_filters = ['is_active','type']
+    available_resource_filters = ['is_active', 'type']
     available_resource_search_filters = ['label']
 
     for available_resource_filter in available_resource_filters:
@@ -179,4 +182,44 @@ def user_group_filters_from_request(request_data):
 
 
 def convert_validation_error_into_response_error(validation_error):
-    return {'password':validation_error}
+    return {'password': validation_error}
+
+
+def error_400_json():
+    return {MESSAGE_KEY: _('ERROR_MESSAGE_400')}
+
+
+def error_403_json():
+    return {MESSAGE_KEY: _('ERROR_MESSAGE_403')}
+
+
+def error_404_json():
+    return {MESSAGE_KEY: _('ERROR_MESSAGE_404')}
+
+
+def error_500_json():
+    return {MESSAGE_KEY: _('ERROR_MESSAGE_500')}
+
+
+def request_user_belongs_to_ngo(request, ngo):
+    if request.user and request.user.ngo and request.user.ngo.key == ngo.key:
+        return True
+    return False
+
+
+def request_user_belongs_to_user_ngo(request, user):
+    if request.user and request.user.ngo and request.user.ngo.key == user.ngo.key:
+        return True
+    return False
+
+
+def request_user_belongs_to_user_group_ngo(request, user_group):
+    if request.user and request.user.ngo and request.user.ngo.key == user_group.ngo.key:
+        return True
+    return False
+
+
+def request_user_belongs_to_resource(request, resource):
+    if request.user and request.user.ngo and request.user.ngo.key == resource.ngo.key:
+        return True
+    return False

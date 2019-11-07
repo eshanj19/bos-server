@@ -317,15 +317,16 @@ class NGOViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                serializer = NGORegistrationResourceSerializer(
-                    data=create_data)
-                if not serializer.is_valid():
-                    raise ValidationException(serializer.errors)
 
                 existing_registration_resources = NGORegistrationResource.objects.filter(ngo=ngo,
                                                                                          type=NGORegistrationResource.ATHLETE).all()
                 for existing_registration_resource in existing_registration_resources:
                     existing_registration_resource.delete()
+
+                serializer = NGORegistrationResourceSerializer(
+                    data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
 
                 serializer.save()
         except DatabaseError:
@@ -436,7 +437,7 @@ class NGOViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                # TODO clean all UserHierarchy objects for ngo
+                # clean all UserHierarchy objects for ngo
                 ngo_filter = Q(parent_user__ngo=ngo) | Q(child_user__ngo=ngo)
                 UserHierarchy.objects.filter(ngo_filter).delete()
 
