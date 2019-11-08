@@ -216,8 +216,6 @@ class UserResource(models.Model):
                              blank=False, on_delete=models.PROTECT)
     resource = models.ForeignKey(
         'resources.Resource', null=False, blank=False, on_delete=models.PROTECT)
-    data = JSONField()
-    is_active = models.BooleanField(default=True, blank=True)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
 

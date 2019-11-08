@@ -23,6 +23,7 @@ from measurements.models import Measurement
 from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
 from resources.models import Resource
+from resources.serializers import ResourceSerializer
 from users.models import User, UserHierarchy, generate_username, UserReading, UserResource, UserGroup
 
 
@@ -162,6 +163,17 @@ class PermissionGroupSerializer(ModelSerializer):
 
 
 class UserResourceSerializer(ModelSerializer):
+    user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all())
+
+    class Meta:
+        model = UserResource
+        exclude = ('id',)
+
+
+class UserResourceDetailSerializer(ModelSerializer):
+    resource = ResourceSerializer()
+
     class Meta:
         model = UserResource
         exclude = ('id',)

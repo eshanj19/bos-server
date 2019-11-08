@@ -42,10 +42,11 @@ from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
     request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo
 from measurements.models import Measurement
-from users.models import User, UserGroup
+from resources.models import Resource
+from users.models import User, UserGroup, UserResource
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
-    UserGroupReadOnlySerializer, AdminSerializer
+    UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer
 
 
 class UserViewSet(ViewSet):
@@ -166,8 +167,8 @@ class AdminViewSet(ViewSet):
                 admin.set_password(password)
                 admin.save()
 
-                for group_id in request.data.get('permission_groups',[]):
-                    group = Group.objects.get(id=group_id,name__startswith=request.user.ngo.key)
+                for group_id in request.data.get('permission_groups', []):
+                    group = Group.objects.get(id=group_id, name__startswith=request.user.ngo.key)
                     admin.groups.add(group)
                     print("Added group")
 
@@ -209,14 +210,13 @@ class AdminViewSet(ViewSet):
 
                 admin = serializer.save()
                 admin.groups.clear()
-                for group_id in request.data.get('permission_groups',[]):
-                    group = Group.objects.get(id=group_id,name__startswith=request.user.ngo.key)
+                for group_id in request.data.get('permission_groups', []):
+                    group = Group.objects.get(id=group_id, name__startswith=request.user.ngo.key)
                     admin.groups.add(group)
                 return Response(serializer.data)
 
         except ValidationException as e:
-            return Response(status=400,data=e.errors)
-
+            return Response(status=400, data=e.errors)
 
     def destroy(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_DESTROY_ADMIN):
@@ -304,7 +304,15 @@ class AthleteViewSet(ViewSet):
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
         serializer = UserSerializer(item)
-        return Response(serializer.data)
+        athlete_data = serializer.data
+        athlete_resources = UserResource.objects.filter(user=item)
+        athlete_resources_serializer = UserResourceDetailSerializer(athlete_resources, many=True)
+        resource_keys = []
+        for resource_data in athlete_resources_serializer.data:
+            print(resource_data)
+            resource_keys.append(resource_data.get('resource').get('key'))
+        athlete_data['resources'] = resource_keys
+        return Response(athlete_data)
 
     def update(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_CHANGE_ATHLETE):
@@ -318,11 +326,29 @@ class AthleteViewSet(ViewSet):
         if not request_user_belongs_to_user_ngo(request, athlete):
             return Response(status=403, data=error_403_json())
 
-        serializer = UserSerializer(athlete, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        try:
+            with transaction.atomic():
+                serializer = UserSerializer(athlete, data=request.data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+                athlete = serializer.save()
+
+                #  Delete all resources attached to user
+                UserResource.objects.filter(user=athlete).delete()
+                for resource_key in request.data.get('resources', []):
+                    resource = Resource.objects.get(key=resource_key, ngo=request.user.ngo)
+                    create_data = {'user': athlete.key, 'resource': resource.key}
+                    user_resource_serializer = UserResourceSerializer(data=create_data)
+                    if not user_resource_serializer.is_valid():
+                        raise ValidationException(user_resource_serializer.errors)
+                    user_resource_serializer.save()
+
+                return Response(serializer.data, status=201)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+        except ValidationError as e:
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
 
     def destroy(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_DESTROY_ATHLETE):
@@ -413,7 +439,14 @@ class CoachViewSet(ViewSet):
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
         serializer = UserSerializer(item)
-        return Response(serializer.data)
+        coach_data = serializer.data
+        coach_resources = UserResource.objects.filter(user=item)
+        coach_resources_serializer = UserResourceDetailSerializer(coach_resources, many=True)
+        resource_keys = []
+        for resource_data in coach_resources_serializer.data:
+            resource_keys.append(resource_data.get('resource').get('key'))
+        coach_data['resources'] = resource_keys
+        return Response(coach_data)
 
     def update(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_CHANGE_COACH):
@@ -427,11 +460,29 @@ class CoachViewSet(ViewSet):
         if not request_user_belongs_to_user_ngo(request, coach):
             return Response(status=403, data=error_403_json())
 
-        serializer = UserSerializer(coach, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        try:
+            with transaction.atomic():
+                serializer = UserSerializer(coach, data=request.data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+                athlete = serializer.save()
+
+                #  Delete all resources attached to user
+                UserResource.objects.filter(user=coach).delete()
+                for resource_key in request.data.get('resources', []):
+                    resource = Resource.objects.get(key=resource_key, ngo=request.user.ngo)
+                    create_data = {'user': coach.key,'resource':resource.key}
+                    user_resource_serializer = UserResourceSerializer(data=create_data)
+                    if not user_resource_serializer.is_valid():
+                        raise ValidationException(user_resource_serializer.errors)
+                    user_resource_serializer.save()
+
+                return Response(serializer.data, status=201)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+        except ValidationError as e:
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
 
     def destroy(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_DESTROY_COACH):
