@@ -29,7 +29,7 @@ from bos.constants import GroupType, METHOD_POST, METHOD_GET
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
+from bos.permissions import DEFAULT_PERMISSIONS_ADMIN,CanChangeCustomUserGroup
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer, MeasurementDetailSerializer
@@ -368,6 +368,23 @@ class NGOViewSet(ViewSet):
             return Response(status=404)
 
         serializer = ResourceSerializer(resources,many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeCustomUserGroup])
+    def all_users(self, request, pk=None):
+        try:
+            ngo = NGO.objects.get(key=pk)
+        except NGO.DoesNotExist:
+            return Response(status=404)
+        if ngo != request.user.ngo:
+            return Response(status=403)
+        try:
+            all_users = User.objects.filter(
+                ngo=ngo,is_active=True)
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        serializer = UserSerializer(all_users,many=True)
         return Response(serializer.data)
 
     # TODO permissions
