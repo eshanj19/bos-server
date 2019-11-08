@@ -65,6 +65,7 @@ class ResourceViewSet(ViewSet):
         if not resource_type:
             return Response(status=400, data=error_400_json())
         if resource_type == Resource.FILE and not has_permission(request, PERMISSION_CAN_ADD_FILE):
+            print("No permission")
             return Response(status=403, data=error_403_json())
         if resource_type == Resource.CURRICULUM and not has_permission(request, PERMISSION_CAN_ADD_CURRICULUM):
             return Response(status=403, data=error_403_json())
