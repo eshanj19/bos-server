@@ -114,6 +114,14 @@ class Command(BaseCommand):
                 admin_group_name = utils.get_ngo_group_name(bos_ngo, GroupType.ADMIN.value)
                 admin_group, created = Group.objects.get_or_create(name=admin_group_name)
                 bos_admin.groups.add(admin_group)
+                try:
+                    code_name = 'bos_admin'
+                    name = 'bos admin'
+                    permission = Permission.objects.get(codename=code_name, name=name)
+                    bos_admin.user_permissions.add(permission)
+                    self.stdout.write(self.style.SUCCESS('Added "%s" permission to admin_group' % name))
+                except Permission.DoesNotExist:
+                    logging.warning("Permission not found with codename '{}' name '{}'.".format(code_name, name))
 
                 for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
                     try:
@@ -125,6 +133,9 @@ class Command(BaseCommand):
                     except Permission.DoesNotExist:
                         logging.warning("Permission not found with codename '{}' name '{}'.".format(code_name, name))
                         continue
+
+                # Add bos admin permissions to bos admin
+
 
                 # Create default Student baselines
 

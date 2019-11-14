@@ -125,6 +125,10 @@ class ResourceViewSet(ViewSet):
 
         update_data = request.data.copy()
         update_data['ngo'] = request.user.ngo.key
+
+        if resource.type == Resource.FILE:
+            update_data['data'] = json.dumps(resource.data)
+            print(resource.data)
         serializer = ResourceSerializer(resource, data=update_data)
         if serializer.is_valid():
             serializer.save()

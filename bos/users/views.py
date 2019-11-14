@@ -37,7 +37,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP, PERMISSION_CAN_ADD_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_CHANGE_CUSTOM_USER_GROUP, PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_VIEW_PERMISSION_GROUP, PERMISSION_CAN_DESTROY_PERMISSION_GROUP, \
-    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP
+    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
     request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo
@@ -732,7 +732,7 @@ class PermissionGroupViewSet(ViewSet):
         item.delete()
         return Response(status=204)
 
-    @action(methods=['GET'], detail=False, permission_classes=[PERMISSION_CAN_VIEW_PERMISSION_GROUP])
+    @action(methods=['GET'], detail=False, permission_classes=[CanViewPermissionGroup])
     def all_permissions(self, request):
         queryset = Permission.objects.all().exclude(codename__in=DEFAULT_PERMISSIONS_BLACKLIST)
         serializer = PermissionSerializer(queryset, many=True, read_only=True)

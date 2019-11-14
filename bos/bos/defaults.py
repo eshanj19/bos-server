@@ -55,7 +55,7 @@ DEFAULT_STUDENT_BASELINES = [('Has student migrated?', Measurement.TEXT, ''),
                              ('Annual income of family', Measurement.TEXT, ''),
                              ('Number of Siblings', Measurement.TEXT, ''),
                              ('Eldest sibling education', Measurement.TEXT, ''),
-                             ('Events (100, 200 etc)', Measurement.TEXT, ''),
+                             # ('Events (100, 200 etc)', Measurement.TEXT, ''),
                              ('Years spent in place of birth', Measurement.TEXT, '')
                              ]
 
@@ -69,7 +69,19 @@ DEFAULT_COACH_BASELINES = [('Region', Measurement.TEXT, ''),
                            ('Average number of training hour provided last year', Measurement.TEXT, ''),
                            ]
 
-DEFAULT_STUDENT_PROGRESSIONS = []
+DEFAULT_STUDENT_PROGRESSIONS = [('100m dash time', Measurement.TEXT, ''),
+                                ('Leg raises', Measurement.TEXT, ''),
+                                ('BMI', Measurement.TEXT, ''),
+                                ('Pushups (1 min)', Measurement.TEXT, ''),
+                                ('Situps (1 min)', Measurement.TEXT, ''),
+                                ('Left leg squats (1 min)', Measurement.TEXT, ''),
+                                ('Right leg squats (1 min)', Measurement.TEXT, ''),
+                                ('Overhead throw (mt)', Measurement.TEXT, 'mt'),
+                                ('Broad Jump (mt)', Measurement.TEXT, 'mt'),
+                                ('Vertical Jump (mt)', Measurement.TEXT, 'mt'),
+                                ('Agility test', Measurement.TEXT, 'seconds'),
+                                ('Crunches (1 min)', Measurement.TEXT, ''),
+                                ('Beep test (levels)', Measurement.TEXT, ''), ]
 
 DEFAULT_PERMISSIONS_BLACKLIST = [
     "add_logentry",

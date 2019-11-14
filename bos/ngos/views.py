@@ -280,16 +280,16 @@ class NGOViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                serializer = NGORegistrationResourceSerializer(
-                    data=create_data)
-                if not serializer.is_valid():
-                    raise ValidationException(serializer.errors)
 
                 existing_registration_resources = NGORegistrationResource.objects.filter(ngo=ngo,
                                                                                          type=NGORegistrationResource.COACH).all()
                 for existing_registration_resource in existing_registration_resources:
-                    print("deleted resource")
                     existing_registration_resource.delete()
+
+                serializer = NGORegistrationResourceSerializer(
+                    data=create_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
 
                 serializer.save()
         except DatabaseError:
@@ -416,7 +416,7 @@ class NGOViewSet(ViewSet):
         ghost_node = {}
         ghost_node['key'] = "ghost_node"
         ghost_node['parent_node'] = None
-        ghost_node['label'] = "Ghost node"
+        ghost_node['label'] = "Organisation"
         ghost_node_children = []
         for active_user in active_users:
             user = {}
