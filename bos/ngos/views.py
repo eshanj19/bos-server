@@ -15,6 +15,8 @@
 #
 
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -29,14 +31,15 @@ from bos.constants import GroupType, METHOD_POST, METHOD_GET
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.permissions import DEFAULT_PERMISSIONS_ADMIN,CanChangeCustomUserGroup
+from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN, CanChangeCustomUserGroup, DEFAULT_PERMISSIONS_NGO_ADMIN, \
+    CanViewMeasurement
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer, MeasurementDetailSerializer
 from ngos.models import NGO, NGORegistrationResource
 from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, NGORegistrationResourceDetailSerializer
 from resources.models import Resource
-from resources.serializers import ResourceSerializer
+from resources.serializers import ResourceSerializer, ResourceDetailSerializer
 from users.models import User, UserHierarchy
 from users.serializers import UserSerializer, PermissionGroupSerializer, UserHierarchySerializer, \
     UserHierarchyWriteSerializer
@@ -89,12 +92,14 @@ class NGOViewSet(ViewSet):
                     "ngo": ngo.key
                 }
 
-                if not password or not confirm_password or (password != confirm_password):
-                    raise ValidationException(
-                        {"password": "Passwords dont match"})
                 serializer = UserSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
+
+                if not password or not confirm_password or (password != confirm_password):
+                    raise ValidationException(
+                        {"password": "Passwords dont match"})
+                validate_password(password=password)
 
                 ngo_admin = serializer.save()
                 ngo_admin.set_password(password)
@@ -106,7 +111,7 @@ class NGOViewSet(ViewSet):
                     name=admin_group_name)
 
                 ngo_admin.groups.add(admin_group)
-                for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
+                for code_name, name, _ in DEFAULT_PERMISSIONS_NGO_ADMIN:
                     try:
                         permission = Permission.objects.get(
                             codename=code_name, name=name)
@@ -121,6 +126,8 @@ class NGOViewSet(ViewSet):
             return Response(status=500)
         except ValidationException as e:
             return Response(e.errors, status=400)
+        except ValidationError as e:
+            return Response({"password": e}, status=400)
 
     def retrieve(self, request, pk=None):
         queryset = NGO.objects.all()
@@ -367,7 +374,7 @@ class NGOViewSet(ViewSet):
         except Resource.DoesNotExist:
             return Response(status=404)
 
-        serializer = ResourceSerializer(resources,many=True)
+        serializer = ResourceSerializer(resources, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeCustomUserGroup])
@@ -380,11 +387,11 @@ class NGOViewSet(ViewSet):
             return Response(status=403)
         try:
             all_users = User.objects.filter(
-                ngo=ngo,is_active=True)
+                ngo=ngo, is_active=True)
         except User.DoesNotExist:
             return Response(status=404)
 
-        serializer = UserSerializer(all_users,many=True)
+        serializer = UserSerializer(all_users, many=True)
         return Response(serializer.data)
 
     # TODO permissions
@@ -476,10 +483,23 @@ class NGOViewSet(ViewSet):
         if measurement_keys is None or len(measurement_keys) == 0:
             return Response(status=400)
 
-        queryset = Measurement.objects.filter(key__in=measurement_keys,is_active=True)
+        queryset = Measurement.objects.filter(key__in=measurement_keys, is_active=True)
         serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
         return Response(data=serializer.data)
 
+    # TODO permissions
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def all_measurements(self, request, pk=None):
+        queryset = Measurement.objects.filter(ngo=request.user.ngo)
+        serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
+        return Response(data=serializer.data)
+
+    # TODO permissions
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    def all_resources(self, request, pk=None):
+        queryset = Resource.objects.filter(ngo=request.user.ngo)
+        serializer = ResourceDetailSerializer(queryset, read_only=True, many=True)
+        return Response(data=serializer.data)
 
 def parent_to_child(hierarchy_data):
     parent_key = hierarchy_data.get('key', None)

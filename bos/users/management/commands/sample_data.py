@@ -27,7 +27,7 @@ from bos.constants import GroupType
 from bos.defaults import DEFAULT_NGO, DEFAULT_NGO_ADMIN_EMAIL, DEFAULT_NGO_ADMIN_FIRST_NAME, \
     DEFAULT_NGO_ADMIN_LAST_NAME, DEFAULT_NGO_ADMIN_USERNAME, DefaultMeasurementType, DEFAULT_STUDENT_PROGRESSIONS
 from bos.exceptions import ValidationException
-from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
+from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN
 from measurements.models import MeasurementType, Measurement, generate_measurement_key
 from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
@@ -122,7 +122,7 @@ class Command(BaseCommand):
                                     self.style.ERROR(
                                         'DefaultMeasurementType "%s" not added to database' % student_progression))
                                 self.stdout.write(self.style.ERROR('"%s"' % serializer.errors))
-                # for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
+                # for code_name, name, _ in DEFAULT_PERMISSIONS_BOS_NGO_ADMIN:
                 #     try:
                 #         permission = Permission.objects.get(codename=code_name, name=name)
                 #         # TODO

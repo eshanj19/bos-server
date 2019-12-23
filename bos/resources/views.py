@@ -62,6 +62,9 @@ class ResourceViewSet(ViewSet):
         create_data['ngo'] = request.user.ngo.key
 
         resource_type = request.data.get('type', None)
+        resource_data = request.data.get('data', None)
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
         if not resource_type:
             return Response(status=400, data=error_400_json())
         if resource_type == Resource.FILE and not has_permission(request, PERMISSION_CAN_ADD_FILE):
@@ -125,10 +128,12 @@ class ResourceViewSet(ViewSet):
 
         update_data = request.data.copy()
         update_data['ngo'] = request.user.ngo.key
+        resource_data = request.data.get('data', None)
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
 
         if resource.type == Resource.FILE:
             update_data['data'] = json.dumps(resource.data)
-            print(resource.data)
         serializer = ResourceSerializer(resource, data=update_data)
         if serializer.is_valid():
             serializer.save()

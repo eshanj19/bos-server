@@ -28,3 +28,13 @@ class ResourceSerializer(ModelSerializer):
     class Meta:
         model = Resource
         exclude = ('id',)
+
+
+class ResourceDetailSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', read_only=True)
+
+    class Meta:
+        model = Resource
+        exclude = ('id',)

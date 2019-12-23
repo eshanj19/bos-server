@@ -43,6 +43,11 @@ urlpatterns = [
     url(r'^login', user_views.login_view, name='login'),
     url(r'^logout', user_views.logout_view, name='logout'),
     url(r'^is_authenticated', user_views.is_authenticated, name='is_user_authenticated'),
+    url(r'^mobile_login', user_views.login_mobile_view, name='login_mobile'),
+    url(r'^mobile_logout', user_views.logout_mobile_view, name='logout_mobile'),
+    url(r'^refresh_mobile_token', user_views.refresh_mobile_token_view, name='refresh_mobile_token'),
+    url(r'^is_authenticated', user_views.is_authenticated, name='is_user_authenticated'),
+    # url(r'^translations', user_views.translations, name='translations'),
 
 ]
 

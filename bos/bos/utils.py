@@ -18,6 +18,9 @@ from django.db.models import Q
 from bos.constants import MESSAGE_KEY
 from django.utils.translation import gettext as _
 
+from users.models import UserHierarchy, User
+from users.serializers import UserHierarchyReadSerializer, UserHierarchySerializer, UserRestrictedDetailSerializer
+
 
 def get_ngo_group_name(ngo, name):
     return ngo.key + '_' + name
@@ -223,3 +226,22 @@ def request_user_belongs_to_resource(request, resource):
     if request.user and request.user.ngo and request.user.ngo.key == resource.ngo.key:
         return True
     return False
+
+
+def find_athletes_under_user(user):
+    user_ids = find_user_ids_under_users([user.id], [])
+    queryset = User.objects.filter(id__in=user_ids,role=User.ATHLETE)
+    serializer = UserRestrictedDetailSerializer(queryset, many=True)
+    return serializer.data
+
+
+def find_user_ids_under_users(user_ids, previous_children):
+    children = []
+    queryset = UserHierarchy.objects.filter(parent_user__in=user_ids)
+    serializer = UserHierarchySerializer(queryset, many=True)
+    for child in serializer.data:
+        children.append(child['child_user'])
+    if len(children) == 0:
+        return previous_children
+    else:
+        return find_user_ids_under_users(children, previous_children + children)

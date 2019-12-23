@@ -44,7 +44,8 @@ class MeasurementTypeSerializer(ModelSerializer):
 class MeasurementDetailSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
-    type = MeasurementTypeSerializer(read_only=True)
+    ngo = SlugRelatedField(slug_field='key',read_only=True)
+    types = MeasurementTypeSerializer(many=True,read_only=True)
 
     class Meta:
         model = Measurement

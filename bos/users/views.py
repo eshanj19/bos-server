@@ -13,7 +13,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+from datetime import timedelta, timezone, datetime
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
@@ -22,10 +22,11 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import api_view, action, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from bos.constants import METHOD_GET
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
@@ -40,13 +41,15 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
-    request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo
+    request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user
 from measurements.models import Measurement
 from resources.models import Resource
-from users.models import User, UserGroup, UserResource
+from resources.serializers import ResourceDetailSerializer
+from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
-    UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer
+    UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
+    UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer
 
 
 class UserViewSet(ViewSet):
@@ -122,6 +125,23 @@ class UserViewSet(ViewSet):
             return Response(status=403, data=error_403_json())
         user.delete()
         return Response(status=204)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def resources(self, request, pk=None):
+        queryset = Resource.objects.filter(userresource__user=request.user)
+        serializer = ResourceDetailSerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def groups(self, request, pk=None):
+        queryset = UserGroup.objects.filter(users__in=[request.user], ngo=request.user.ngo)
+        serializer = UserGroupDetailSerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def athletes(self, request, pk=None):
+        response_data = find_athletes_under_user(request.user)
+        return Response(data=response_data)
 
 
 class AdminViewSet(ViewSet):
@@ -393,9 +413,15 @@ class CoachViewSet(ViewSet):
 
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
+        password = request.data.get('password')
+        confirm_password = request.data.get('confirm_password')
         resource = request.data.get('resource', None)
         try:
             with transaction.atomic():
+                validate_password(password)
+                validate_password(confirm_password)
+                if confirm_password != password:
+                    raise ValidationException([{'password': 'Passwords do not match'}])
                 serializer = CoachSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
@@ -403,6 +429,9 @@ class CoachViewSet(ViewSet):
                 # TODO validate measurements belong to the same ngo
 
                 coach = serializer.save()
+                coach.set_password(password)
+                coach.save()
+
                 baselines = create_data["baselines"]
                 for baseline in baselines:
                     user_reading_data = {}
@@ -471,7 +500,7 @@ class CoachViewSet(ViewSet):
                 UserResource.objects.filter(user=coach).delete()
                 for resource_key in request.data.get('resources', []):
                     resource = Resource.objects.get(key=resource_key, ngo=request.user.ngo)
-                    create_data = {'user': coach.key,'resource':resource.key}
+                    create_data = {'user': coach.key, 'resource': resource.key}
                     user_resource_serializer = UserResourceSerializer(data=create_data)
                     if not user_resource_serializer.is_valid():
                         raise ValidationException(user_resource_serializer.errors)
@@ -746,3 +775,56 @@ def is_authenticated(request):
         return Response(status=200, data={"is_authenticated": True})
     else:
         return Response(status=200, data={"is_authenticated": False})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_mobile_view(request):
+    username = request.data.get('username', None)
+    password = request.data.get('password', None)
+    if username is None:
+        return Response(data=error_400_json(), status=400)
+    if password is None:
+        return Response(data=error_400_json(), status=400)
+    user = authenticate(username=username, password=password)
+    if user:
+        # A backend authenticated the credentials
+        expiry_date = datetime.now(tz=timezone.utc) + timedelta(days=30)
+        auth_token = MobileAuthToken.objects.create(user=user, expiry_date=expiry_date)
+        data = {'username': user.username,
+                'key': user.key,
+                'ngo': user.ngo.key if user.ngo else None,
+                'ngo_name': user.ngo.name if user.ngo else None,
+                'permissions': user.get_all_permissions(),
+                'role': user.role,
+                'language': user.language,
+                'token': auth_token.token,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'expiry_date': auth_token.expiry_date
+                }
+        return Response(data=data, status=200)
+    else:
+        # No backend authenticated the credentials
+        return Response(data=error_403_json(), status=403)
+
+
+@api_view(['POST'])
+def logout_mobile_view(request):
+    if request.user and request.user.is_authenticated:
+        logout(request)
+        return Response(status=200)
+    else:
+        return Response(data=error_403_json(), status=403)
+
+
+@api_view(['POST'])
+def refresh_mobile_token_view(request):
+    if request.user and request.user.is_authenticated:
+        expiry_date = datetime.now(tz=timezone.utc) + timedelta(days=30)
+        auth_token = MobileAuthToken.objects.create(user=request.user, expiry_date=expiry_date)
+        return Response(status=200, data={
+            'token': auth_token.token,
+            'expiry_date': auth_token.expiry_date,
+        })
+    return Resource

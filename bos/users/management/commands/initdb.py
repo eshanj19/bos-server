@@ -26,7 +26,7 @@ from bos.constants import GroupType
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES, DEFAULT_NGO, DEFAULT_NGO_ADMIN_EMAIL, DEFAULT_NGO_ADMIN_FIRST_NAME, \
     DEFAULT_NGO_ADMIN_LAST_NAME, DEFAULT_NGO_ADMIN_USERNAME, DEFAULT_STUDENT_BASELINES, \
     DefaultMeasurementType, DEFAULT_STUDENT_PROGRESSIONS, DEFAULT_COACH_BASELINES
-from bos.permissions import DEFAULT_PERMISSIONS_ADMIN
+from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN
 from measurements.models import MeasurementType, generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
 from ngos.models import NGO, generate_ngo_key
@@ -123,7 +123,7 @@ class Command(BaseCommand):
                 except Permission.DoesNotExist:
                     logging.warning("Permission not found with codename '{}' name '{}'.".format(code_name, name))
 
-                for code_name, name, _ in DEFAULT_PERMISSIONS_ADMIN:
+                for code_name, name, _ in DEFAULT_PERMISSIONS_BOS_NGO_ADMIN:
                     try:
                         permission = Permission.objects.get(codename=code_name, name=name)
                         # TODO

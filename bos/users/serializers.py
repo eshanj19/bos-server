@@ -23,7 +23,7 @@ from measurements.models import Measurement
 from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
 from resources.models import Resource
-from resources.serializers import ResourceSerializer
+from resources.serializers import ResourceSerializer, ResourceDetailSerializer
 from users.models import User, UserHierarchy, generate_username, UserReading, UserResource, UserGroup
 
 
@@ -37,6 +37,20 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         exclude = ('id',)
+
+
+class UserRestrictedDetailSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    role = CharField(default=User.ADMIN)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = User
+        exclude = (
+            'id', 'last_login', 'is_superuser', 'username', 'is_staff', 'date_joined', 'password', 'reset_password',
+            'creation_time', 'last_modification_time', 'groups', 'user_permissions')
 
 
 class AdminSerializer(ModelSerializer):
@@ -130,8 +144,17 @@ class UserHierarchySerializer(ModelSerializer):
 
 class UserHierarchyWriteSerializer(ModelSerializer):
     parent_user = SlugRelatedField(slug_field='key', queryset=User.objects.all(),
-                                   required=False,allow_null=True,write_only=True)
-    child_user = SlugRelatedField(slug_field='key', queryset=User.objects.all(),write_only=True)
+                                   required=False, allow_null=True, write_only=True)
+    child_user = SlugRelatedField(slug_field='key', queryset=User.objects.all(), write_only=True)
+
+    class Meta:
+        model = UserHierarchy
+        exclude = ('id',)
+
+
+class UserHierarchyReadSerializer(ModelSerializer):
+    parent_user = UserRestrictedDetailSerializer()
+    child_user = UserRestrictedDetailSerializer()
 
     class Meta:
         model = UserHierarchy
@@ -172,14 +195,24 @@ class UserResourceSerializer(ModelSerializer):
 
 
 class UserResourceDetailSerializer(ModelSerializer):
-    resource = ResourceSerializer()
+    resource = ResourceSerializer(read_only=True)
 
     class Meta:
         model = UserResource
-        exclude = ('id',)
+        exclude = ('id', 'user')
 
 
 class UserGroupSerializer(ModelSerializer):
+    class Meta:
+        model = UserGroup
+        exclude = ('id',)
+
+
+class UserGroupDetailSerializer(ModelSerializer):
+    users = UserRestrictedDetailSerializer(many=True, read_only=True)
+    resources = ResourceDetailSerializer(many=True, read_only=True)
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+
     class Meta:
         model = UserGroup
         exclude = ('id',)
