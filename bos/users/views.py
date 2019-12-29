@@ -128,7 +128,11 @@ class UserViewSet(ViewSet):
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def resources(self, request, pk=None):
-        queryset = Resource.objects.filter(userresource__user=request.user)
+        try:
+            user = User.objects.get(key=pk)
+        except User.DoesNotExist:
+            return Response(status=404)
+        queryset = Resource.objects.filter(userresource__user=user)
         serializer = ResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
