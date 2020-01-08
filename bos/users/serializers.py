@@ -108,6 +108,23 @@ class UserReadingSerializer(ModelSerializer):
         exclude = ('id',)
 
 
+class UserReadingWriteOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    by_user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    entered_by = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    measurement = SlugRelatedField(slug_field='key', queryset=Measurement.objects.all())
+    measurement_object = MeasurementSerializer(read_only=True)
+    resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all(),default=None)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = UserReading
+        exclude = ('id',)
+
+
 class UserReadingReadOnlySerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
@@ -115,7 +132,7 @@ class UserReadingReadOnlySerializer(ModelSerializer):
     user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
     by_user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
     entered_by = SlugRelatedField(slug_field='key', queryset=User.objects.all())
-    measurement = MeasurementSerializer(read_only=True)
+    measurement = SlugRelatedField(slug_field='key', queryset=Measurement.objects.all())
     is_active = BooleanField(default=True)
 
     class Meta:

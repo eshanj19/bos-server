@@ -38,18 +38,21 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP, PERMISSION_CAN_ADD_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_CHANGE_CUSTOM_USER_GROUP, PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_VIEW_PERMISSION_GROUP, PERMISSION_CAN_DESTROY_PERMISSION_GROUP, \
-    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup
+    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup, \
+    PERMISSION_CAN_VIEW_READING, PERMISSION_CAN_DESTROY_READING
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
-    request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user
+    request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
+    user_reading_filters_from_request, request_user_belongs_to_reading
 from measurements.models import Measurement
 from resources.models import Resource
 from resources.serializers import ResourceDetailSerializer
-from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy
+from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy, UserReading
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
-    UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer
+    UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer, \
+    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer
 
 
 class UserViewSet(ViewSet):
@@ -333,7 +336,6 @@ class AthleteViewSet(ViewSet):
         athlete_resources_serializer = UserResourceDetailSerializer(athlete_resources, many=True)
         resource_keys = []
         for resource_data in athlete_resources_serializer.data:
-            print(resource_data)
             resource_keys.append(resource_data.get('resource').get('key'))
         athlete_data['resources'] = resource_keys
         return Response(athlete_data)
@@ -770,6 +772,88 @@ class PermissionGroupViewSet(ViewSet):
         queryset = Permission.objects.all().exclude(codename__in=DEFAULT_PERMISSIONS_BLACKLIST)
         serializer = PermissionSerializer(queryset, many=True, read_only=True)
         return Response(serializer.data)
+
+
+class UserReadingViewSet(ViewSet):
+
+    def list(self, request):
+        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+            return Response(status=403, data=error_403_json())
+
+        user_reading_filters, search_filters = user_reading_filters_from_request(request.GET)
+        ordering = request.GET.get('ordering', None)
+        common_filters = {
+            'ngo': request.user.ngo,
+        }
+        filters = {**common_filters, **user_reading_filters}
+
+        queryset = UserReading.objects.filter(search_filters, **filters)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        paginator = BOSPageNumberPagination()
+        result = paginator.paginate_queryset(queryset, request)
+        serializer = UserReadingReadOnlySerializer(result, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def create(self, request):
+        # TODO
+        # if not has_permission(request, PERMISSION_CAN_ADD_READING):
+        #     return Response(status=403, data=error_403_json())
+        if not request.user:
+            return Response(status=403, data=error_403_json())
+
+        create_data = request.data.copy()
+
+        try:
+            user_reading_data = {}
+            user_reading_data['user'] = create_data.get('user',None)
+            user_reading_data['ngo'] = create_data.get('ngo',None)
+            user_reading_data['resource'] = create_data.get('resource',None)
+            user_reading_data['measurement'] = create_data.get('measurement',None)
+            user_reading_data['value'] = create_data.get('value',None)
+
+            user_reading_data['by_user'] = request.user.key
+            user_reading_data['entered_by'] = request.user.key
+
+            # TODO Check user measurement belong to the same ngo
+            # TODO entered date time
+
+            user_reading_serializer = UserReadingWriteOnlySerializer(data=user_reading_data)
+            if not user_reading_serializer.is_valid():
+                raise ValidationException(user_reading_serializer.errors)
+            user_reading_serializer.save()
+
+            return Response(user_reading_serializer.data, status=201)
+
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+    def retrieve(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+            return Response(status=403, data=error_403_json())
+
+        queryset = UserReading.objects.all()
+        item = get_object_or_404(queryset, key=pk)
+        serializer = UserReadingSerializer(item)
+        return Response(serializer.data)
+
+    # def update(self, request, pk=None):
+    #     return Response(serializer.errors, status=400)
+
+    def destroy(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_READING):
+            return Response(status=403, data=error_403_json())
+
+        try:
+            user_reading = UserReading.objects.get(key=pk)
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_reading(request, user_reading):
+            return Response(status=403, data=error_403_json())
+
+        user_reading.delete()
+        return Response(status=204)
 
 
 @api_view(['GET'])

@@ -36,6 +36,7 @@ router.register(r'measurements', measurement_views.MeasurementViewSet, 'Measurem
 router.register(r'measurement_types', measurement_views.MeasurementTypeViewSet, 'MeasurementType')
 router.register(r'permission_groups', user_views.PermissionGroupViewSet, 'PermissionGroup')
 router.register(r'resources', resource_views.ResourceViewSet, 'Resource')
+router.register(r'readings', user_views.UserReadingViewSet, 'UserReading')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

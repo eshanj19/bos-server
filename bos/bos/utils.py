@@ -184,6 +184,31 @@ def user_group_filters_from_request(request_data):
     return user_group_filter, search_filter
 
 
+def user_reading_filters_from_request(request_data):
+    user_reading_filter = {}
+    available_user_reading_filters = ['is_active']
+    available_user_reading_search_filters = ['measurement','athlete']
+
+    for available_user_group_filter in available_user_reading_filters:
+        if available_user_group_filter in request_data:
+            value = request_data.get(available_user_group_filter)
+            if value.lower() == 'false':
+                user_reading_filter[available_user_group_filter] = False
+            else:
+                user_reading_filter[available_user_group_filter] = True
+
+    search_filter = Q()
+    for available_user_reading_search_filter in available_user_reading_search_filters:
+        if available_user_reading_search_filter in request_data:
+            value = request_data.get(available_user_reading_search_filter)
+            if available_user_reading_search_filter == 'athlete':
+                search_filter = search_filter & (Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+            if available_user_reading_search_filter == 'measurement':
+                search_filter = search_filter & Q(measurement__key=value)
+
+    return user_reading_filter, search_filter
+
+
 def convert_validation_error_into_response_error(validation_error):
     return {'password': validation_error}
 
@@ -228,9 +253,15 @@ def request_user_belongs_to_resource(request, resource):
     return False
 
 
+def request_user_belongs_to_reading(request, reading):
+    if request.user and request.user.ngo and request.user.ngo.key == reading.ngo.key:
+        return True
+    return False
+
+
 def find_athletes_under_user(user):
     user_ids = find_user_ids_under_users([user.id], [])
-    queryset = User.objects.filter(id__in=user_ids,role=User.ATHLETE)
+    queryset = User.objects.filter(id__in=user_ids, role=User.ATHLETE)
     serializer = UserRestrictedDetailSerializer(queryset, many=True)
     return serializer.data
 
