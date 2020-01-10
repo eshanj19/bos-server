@@ -28,7 +28,8 @@ from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMISSION_CAN_ADD_FILE, \
     PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_CAN_CHANGE_FILE, \
-    PERMISSION_CAN_CHANGE_CURRICULUM, PERMISSION_CAN_CHANGE_TRAINING_SESSION, PERMISSION_CAN_DESTROY_RESOURCE
+    PERMISSION_CAN_CHANGE_CURRICULUM, PERMISSION_CAN_CHANGE_TRAINING_SESSION, PERMISSION_CAN_DESTROY_RESOURCE, \
+    PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM
 from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource
 from resources.models import Resource
 from resources.serializers import ResourceSerializer
@@ -75,6 +76,9 @@ class ResourceViewSet(ViewSet):
         if resource_type == Resource.TRAINING_SESSION and not has_permission(request,
                                                                              PERMISSION_CAN_ADD_TRAINING_SESSION):
             return Response(status=403, data=error_403_json())
+        if resource_type == Resource.REGISTRATION_FORM and not has_permission(request,
+                                                                              PERMISSION_CAN_ADD_REGISTRATION_FORM):
+            return Response(status=403, data=error_403_json())
 
         if resource_type == Resource.FILE:
             #  TODO Saving POST'ed file to storage
@@ -116,6 +120,9 @@ class ResourceViewSet(ViewSet):
             return Response(status=403, data=error_403_json())
         if resource_type == Resource.TRAINING_SESSION and not has_permission(request,
                                                                              PERMISSION_CAN_CHANGE_TRAINING_SESSION):
+            return Response(status=403, data=error_403_json())
+        if resource_type == Resource.REGISTRATION_FORM and not has_permission(request,
+                                                                              PERMISSION_CAN_CHANGE_REGISTRATION_FORM):
             return Response(status=403, data=error_403_json())
 
         try:

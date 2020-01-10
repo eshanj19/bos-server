@@ -320,6 +320,10 @@ class NGOViewSet(ViewSet):
         create_data['type'] = NGORegistrationResource.ATHLETE
         create_data['ngo'] = ngo.key
 
+        try:
+            _ = Resource.objects.get(key=create_data['resource'],type=Resource.REGISTRATION_FORM)
+        except Resource.DoesNotExist:
+            return Response(status=404)
         # TODO error
 
         try:

@@ -19,6 +19,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import api_view, action, permission_classes
@@ -135,7 +136,8 @@ class UserViewSet(ViewSet):
             user = User.objects.get(key=pk)
         except User.DoesNotExist:
             return Response(status=404)
-        queryset = Resource.objects.filter(userresource__user=user)
+        queryset = Resource.objects.filter(
+            Q(userresource__user=user) | Q(ngoregistrationresource__ngo=request.user.ngo))
         serializer = ResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
@@ -295,7 +297,7 @@ class AthleteViewSet(ViewSet):
                     raise ValidationException(serializer.errors)
 
                 athlete = serializer.save()
-                baselines = create_data["baselines"]
+                baselines = create_data.get("baselines", [])
                 for baseline in baselines:
                     user_reading_data = {}
                     user_reading_data['user'] = athlete.key
@@ -438,7 +440,7 @@ class CoachViewSet(ViewSet):
                 coach.set_password(password)
                 coach.save()
 
-                baselines = create_data["baselines"]
+                baselines = create_data.get("baselines", [])
                 for baseline in baselines:
                     user_reading_data = {}
                     user_reading_data['user'] = coach.key
@@ -806,11 +808,11 @@ class UserReadingViewSet(ViewSet):
 
         try:
             user_reading_data = {}
-            user_reading_data['user'] = create_data.get('user',None)
-            user_reading_data['ngo'] = create_data.get('ngo',None)
-            user_reading_data['resource'] = create_data.get('resource',None)
-            user_reading_data['measurement'] = create_data.get('measurement',None)
-            user_reading_data['value'] = create_data.get('value',None)
+            user_reading_data['user'] = create_data.get('user', None)
+            user_reading_data['ngo'] = create_data.get('ngo', None)
+            user_reading_data['resource'] = create_data.get('resource', None)
+            user_reading_data['measurement'] = create_data.get('measurement', None)
+            user_reading_data['value'] = create_data.get('value', None)
 
             user_reading_data['by_user'] = request.user.key
             user_reading_data['entered_by'] = request.user.key
