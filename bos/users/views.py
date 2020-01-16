@@ -53,7 +53,7 @@ from users.serializers import UserSerializer, PermissionGroupDetailSerializer, P
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
     UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer, \
-    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer
+    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, UserHierarchyWriteSerializer
 
 
 class UserViewSet(ViewSet):
@@ -151,6 +151,16 @@ class UserViewSet(ViewSet):
     def athletes(self, request, pk=None):
         response_data = find_athletes_under_user(request.user)
         return Response(data=response_data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def readings(self, request, pk=None):
+        try:
+            user = User.objects.get(key=pk)
+        except User.DoesNotExist:
+            return Response(status=404)
+        queryset = UserReading.objects.filter(user=user)
+        serializer = UserReadingReadOnlySerializer(queryset, many=True)
+        return Response(data=serializer.data)
 
 
 class AdminViewSet(ViewSet):
@@ -297,6 +307,16 @@ class AthleteViewSet(ViewSet):
                     raise ValidationException(serializer.errors)
 
                 athlete = serializer.save()
+
+                # Create entry in user hierarchy if user is a coach
+
+                if request.user.role == User.COACH:
+                    create_data = {'parent_user': request.user.key, 'child_user': athlete.key}
+                    user_hierarchy_serializer = UserHierarchyWriteSerializer(data=create_data)
+                    if not user_hierarchy_serializer.is_valid():
+                        raise ValidationException(user_hierarchy_serializer.errors)
+                    user_hierarchy_serializer.save()
+
                 baselines = create_data.get("baselines", [])
                 for baseline in baselines:
                     user_reading_data = {}

@@ -321,7 +321,7 @@ class NGOViewSet(ViewSet):
         create_data['ngo'] = ngo.key
 
         try:
-            _ = Resource.objects.get(key=create_data['resource'],type=Resource.REGISTRATION_FORM)
+            _ = Resource.objects.get(key=create_data['resource'], type=Resource.REGISTRATION_FORM)
         except Resource.DoesNotExist:
             return Response(status=404)
         # TODO error
@@ -505,6 +505,7 @@ class NGOViewSet(ViewSet):
         serializer = ResourceDetailSerializer(queryset, read_only=True, many=True)
         return Response(data=serializer.data)
 
+
 def parent_to_child(hierarchy_data):
     parent_key = hierarchy_data.get('key', None)
     children = hierarchy_data.get('children', [])
@@ -523,7 +524,6 @@ def parent_to_child(hierarchy_data):
         # Write to user hierarchy
     for child_key in children_keys:
         create_data = {'parent_user': parent_key, 'child_user': child_key}
-        print(create_data)
         serializer = UserHierarchyWriteSerializer(data=create_data)
         if not serializer.is_valid():
             raise ValidationException(serializer.errors)
