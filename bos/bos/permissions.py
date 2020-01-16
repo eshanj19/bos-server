@@ -55,6 +55,19 @@ PERMISSIONS_FILE = [PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE,
                     PERMISSION_CAN_DESTROY_FILE,
                     PERMISSION_CAN_VIEW_FILE]
 
+# REGISTRATION_FORM
+PERMISSION_CAN_ADD_REGISTRATION_FORM = (
+'add_registrationform', 'Can add registration form', 'resources.add_registrationform')
+PERMISSION_CAN_CHANGE_REGISTRATION_FORM = (
+    'change_registrationform', 'Can change registration form', 'resources.change_registrationform')
+PERMISSION_CAN_DESTROY_REGISTRATION_FORM = (
+    'delete_registrationform', 'Can delete registration form', 'resources.delete_registrationform')
+PERMISSION_CAN_VIEW_REGISTRATION_FORM = (
+'view_registrationform', 'Can view registration form', 'resources.view_registrationform')
+PERMISSIONS_REGISTRATION_FORM = [PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM,
+                                 PERMISSION_CAN_DESTROY_REGISTRATION_FORM,
+                                 PERMISSION_CAN_VIEW_REGISTRATION_FORM]
+
 # MEASUREMENT
 PERMISSION_CAN_ADD_MEASUREMENT = ('add_measurement', 'Can add measurement', 'measurements.add_measurement')
 PERMISSION_CAN_CHANGE_MEASUREMENT = ('change_measurement', 'Can change measurement', 'measurements.change_measurement')
@@ -163,7 +176,7 @@ DEFAULT_PERMISSIONS_NGO_ADMIN = PERMISSIONS_PERMISSION + PERMISSIONS_MEASUREMENT
                                 PERMISSIONS_RESOURCE + PERMISSIONS_CURRICULUM + PERMISSIONS_FILE + \
                                 PERMISSIONS_TRAINING_SESSION + PERMISSIONS_COACH + PERMISSIONS_ATHLETE + \
                                 PERMISSIONS_ADMIN + PERMISSIONS_CUSTOM_USER_GROUP + PERMISSIONS_PERMISSION_GROUP + \
-                                PERMISSIONS_READING
+                                PERMISSIONS_READING + PERMISSIONS_REGISTRATION_FORM
 
 DEFAULT_PERMISSIONS_BOS_NGO_ADMIN = PERMISSIONS_NGO + DEFAULT_PERMISSIONS_NGO_ADMIN
 
