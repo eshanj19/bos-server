@@ -773,6 +773,17 @@ class PermissionGroupViewSet(ViewSet):
         serializer = PermissionSerializer(queryset, many=True, read_only=True)
         return Response(serializer.data)
 
+    @action(methods=['GET'], detail=True, permission_classes=[CanViewPermissionGroup])
+    def show(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_PERMISSION_GROUP):
+            return Response(status=403, data=error_403_json())
+
+        ngo_key = request.user.ngo.key
+        queryset = Group.objects.filter(name__startswith=ngo_key)
+        item = get_object_or_404(queryset, pk=pk)
+        serializer = PermissionGroupDetailSerializer(item)
+        return Response(serializer.data)
+
 
 class UserReadingViewSet(ViewSet):
 
