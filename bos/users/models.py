@@ -68,9 +68,15 @@ class User(AbstractUser):
     ATHLETE = 'athlete'
     COACH = 'coach'
     ROLES = (
-        (ADMIN, 'admin'),
-        (ATHLETE, 'athlete'),
-        (COACH, 'coach')
+        (ADMIN, 'Admin'),
+        (ATHLETE, 'Athlete'),
+        (COACH, 'Coach')
+    )
+    MALE = 'male'
+    FEMALE = 'female'
+    GENDERS = (
+        (MALE, 'Male'),
+        (FEMALE, 'Female'),
     )
 
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER,
@@ -93,6 +99,8 @@ class User(AbstractUser):
     password = models.CharField(max_length=1024, null=True, blank=True)
     is_active = models.BooleanField(default=True, blank=True)
     role = models.CharField(max_length=10, choices=ROLES,
+                            null=False, blank=False)
+    gender = models.CharField(max_length=10, choices=GENDERS,
                             null=False, blank=False)
     language = models.CharField(
         max_length=5, choices=LANGUAGES, default=ENGLISH, null=False, blank=True)

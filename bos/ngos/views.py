@@ -408,7 +408,7 @@ class NGOViewSet(ViewSet):
 
         try:
             resource = NGORegistrationResource.objects.get(
-                ngo=ngo, type=NGORegistrationResource.ATHLETE)
+                ngo=ngo, type=NGORegistrationResource.ATHLETE,resource__is_active=True)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 

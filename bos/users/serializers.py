@@ -39,6 +39,18 @@ class UserSerializer(ModelSerializer):
         exclude = ('id',)
 
 
+class CoachSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    role = CharField(default=User.COACH)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = User
+        exclude = ('id',)
+
+
 class UserRestrictedDetailSerializer(ModelSerializer):
     lookup_field = 'key'
     pk_field = 'key'
@@ -51,6 +63,20 @@ class UserRestrictedDetailSerializer(ModelSerializer):
         exclude = (
             'id', 'last_login', 'is_superuser', 'username', 'is_staff', 'date_joined', 'password', 'reset_password',
             'creation_time', 'last_modification_time', 'groups', 'user_permissions')
+
+
+class UserEditRestrictedDetailSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    role = CharField(default=User.ADMIN)
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = User
+        exclude = (
+            'id', 'last_login', 'is_superuser', 'is_staff', 'date_joined', 'password', 'reset_password',
+            'creation_time', 'last_modification_time')
 
 
 class AdminSerializer(ModelSerializer):
@@ -117,7 +143,7 @@ class UserReadingWriteOnlySerializer(ModelSerializer):
     entered_by = SlugRelatedField(slug_field='key', queryset=User.objects.all())
     measurement = SlugRelatedField(slug_field='key', queryset=Measurement.objects.all())
     measurement_object = MeasurementSerializer(read_only=True)
-    resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all(),default=None)
+    resource = SlugRelatedField(slug_field='key', queryset=Resource.objects.all(), default=None)
     is_active = BooleanField(default=True)
 
     class Meta:

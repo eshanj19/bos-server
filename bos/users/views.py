@@ -19,10 +19,9 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from psycopg2._psycopg import DatabaseError
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -55,7 +54,8 @@ from users.serializers import UserSerializer, PermissionGroupDetailSerializer, P
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
     UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer, \
-    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, UserHierarchyWriteSerializer
+    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, UserHierarchyWriteSerializer, \
+    UserEditRestrictedDetailSerializer
 
 
 class UserViewSet(ViewSet):
@@ -138,8 +138,9 @@ class UserViewSet(ViewSet):
             user = User.objects.get(key=pk)
         except User.DoesNotExist:
             return Response(status=404)
-        queryset = Resource.objects.filter(
-            Q(userresource__user=user) | Q(ngoregistrationresource__ngo=request.user.ngo))
+        queryset = Resource.objects.filter(Q(is_active=True) & (
+            Q(userresource__user=user) | Q(ngoregistrationresource__ngo=request.user.ngo) |
+            Q(usergroup__users__in=[user]))).distinct()
         serializer = ResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
@@ -241,7 +242,6 @@ class AdminViewSet(ViewSet):
                 for group_id in request.data.get('permission_groups', []):
                     group = Group.objects.get(id=group_id, name__startswith=request.user.ngo.key)
                     admin.groups.add(group)
-                    print("Added group")
 
                 return Response(serializer.data, status=201)
         except ValidationException as e:
@@ -256,7 +256,7 @@ class AdminViewSet(ViewSet):
 
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
-        serializer = AdminSerializer(item)
+        serializer = UserEditRestrictedDetailSerializer(item)
         admin_data = serializer.data
         admin_data['permission_groups'] = admin_data['groups']
         return Response(admin_data)
@@ -384,7 +384,7 @@ class AthleteViewSet(ViewSet):
 
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
-        serializer = UserSerializer(item)
+        serializer = UserEditRestrictedDetailSerializer(item)
         athlete_data = serializer.data
         athlete_resources = UserResource.objects.filter(user=item)
         athlete_resources_serializer = UserResourceDetailSerializer(athlete_resources, many=True)
@@ -475,13 +475,13 @@ class CoachViewSet(ViewSet):
         create_data['ngo'] = request.user.ngo.key
         password = request.data.get('password')
         confirm_password = request.data.get('confirm_password')
-        resource = request.data.get('resource', None)
         try:
             with transaction.atomic():
-                validate_password(password)
-                validate_password(confirm_password)
                 if confirm_password != password:
                     raise ValidationException([{'password': 'Passwords do not match'}])
+                validate_password(password)
+                validate_password(confirm_password)
+
                 serializer = CoachSerializer(data=create_data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
@@ -492,33 +492,35 @@ class CoachViewSet(ViewSet):
                 coach.set_password(password)
                 coach.save()
 
-                baselines = create_data.get("baselines", [])
-                for baseline in baselines:
-                    user_reading_data = {}
-                    user_reading_data['user'] = coach.key
-                    user_reading_data['resource'] = resource
-                    user_reading_data['ngo'] = request.user.ngo.key
-                    user_reading_data['by_user'] = request.user.key
-                    user_reading_data['entered_by'] = request.user.key
-                    user_reading_data['measurement'] = baseline['key']
-                    if baseline['input_type'] == Measurement.BOOLEAN:
-                        boolean_value = baseline['value']
-                        if boolean_value:
-                            user_reading_data['value'] = "True"
-                        else:
-                            user_reading_data['value'] = "False"
-                    else:
-                        user_reading_data['value'] = baseline['value']
-                    user_reading_serializer = UserReadingSerializer(data=user_reading_data)
-                    if not user_reading_serializer.is_valid():
-                        raise ValidationException(user_reading_serializer.errors)
-                    _ = user_reading_serializer.save()
+                # baselines = create_data.get("baselines", [])
+                # for baseline in baselines:
+                #     user_reading_data = {}
+                #     user_reading_data['user'] = coach.key
+                #     user_reading_data['resource'] = resource
+                #     user_reading_data['ngo'] = request.user.ngo.key
+                #     user_reading_data['by_user'] = request.user.key
+                #     user_reading_data['entered_by'] = request.user.key
+                #     user_reading_data['measurement'] = baseline['key']
+                #     if baseline['input_type'] == Measurement.BOOLEAN:
+                #         boolean_value = baseline['value']
+                #         if boolean_value:
+                #             user_reading_data['value'] = "True"
+                #         else:
+                #             user_reading_data['value'] = "False"
+                #     else:
+                #         user_reading_data['value'] = baseline['value']
+                #     user_reading_serializer = UserReadingSerializer(data=user_reading_data)
+                #     if not user_reading_serializer.is_valid():
+                #         raise ValidationException(user_reading_serializer.errors)
+                #     _ = user_reading_serializer.save()
 
                 return Response(serializer.data, status=201)
 
-        except DatabaseError:
-            return Response(status=500)
+        except IntegrityError as e:
+            return Response(status=400,data=[{'username': 'This username is taken'}])
         except ValidationException as e:
+            return Response(status=400, data=e.errors)
+        except ValidationError as e:
             return Response(status=400, data=e.errors)
 
     def retrieve(self, request, pk=None):
@@ -527,7 +529,7 @@ class CoachViewSet(ViewSet):
 
         queryset = User.objects.all()
         item = get_object_or_404(queryset, key=pk)
-        serializer = UserSerializer(item)
+        serializer = UserEditRestrictedDetailSerializer(item)
         coach_data = serializer.data
         coach_resources = UserResource.objects.filter(user=item)
         coach_resources_serializer = UserResourceDetailSerializer(coach_resources, many=True)
@@ -535,6 +537,7 @@ class CoachViewSet(ViewSet):
         for resource_data in coach_resources_serializer.data:
             resource_keys.append(resource_data.get('resource').get('key'))
         coach_data['resources'] = resource_keys
+        coach_data['permission_groups'] = coach_data['groups']
         return Response(coach_data)
 
     def update(self, request, pk=None):
@@ -551,10 +554,14 @@ class CoachViewSet(ViewSet):
 
         try:
             with transaction.atomic():
-                serializer = UserSerializer(coach, data=request.data)
+                serializer = CoachSerializer(coach, data=request.data)
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
-                athlete = serializer.save()
+                coach = serializer.save()
+                coach.groups.clear()
+                for group_id in request.data.get('permission_groups', []):
+                    group = Group.objects.get(id=group_id, name__startswith=request.user.ngo.key)
+                    coach.groups.add(group)
 
                 #  Delete all resources attached to user
                 UserResource.objects.filter(user=coach).delete()

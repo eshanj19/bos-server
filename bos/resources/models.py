@@ -52,7 +52,7 @@ class Resource(models.Model):
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_RESOURCE, default=generate_resource_key, unique=True)
     data = JSONField()
     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
-    description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=False)
+    description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=True)
     type = models.CharField(choices=RESOURCE_TEMPLATE_TYPES, max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, blank=True)
     is_shared = models.BooleanField(default=True, blank=True)
