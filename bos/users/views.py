@@ -166,8 +166,6 @@ class UserViewSet(ViewSet):
             password=request.data.get('password')
             confirmPassword=request.data.get('confirmPassword')
             currentpassword=request.data.get('currentpassword')
-            print(currentpassword)
-            print(user.password)
             if not check_password(currentpassword,user.password):
                message="current password is wrong"
                return Response(status=400,data=error_checkone(message))
