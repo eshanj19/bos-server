@@ -15,6 +15,7 @@
 #
 from datetime import timedelta, timezone, datetime
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -28,6 +29,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos.constants import METHOD_GET
+from bos.constants import METHOD_POST
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
@@ -44,7 +46,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
     request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
-    user_reading_filters_from_request, request_user_belongs_to_reading
+    user_reading_filters_from_request, request_user_belongs_to_reading,error_checkone
 from measurements.models import Measurement
 from resources.models import Resource
 from resources.serializers import ResourceDetailSerializer
@@ -151,6 +153,36 @@ class UserViewSet(ViewSet):
     def athletes(self, request, pk=None):
         response_data = find_athletes_under_user(request.user)
         return Response(data=response_data)
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def reset_password(self, request, pk=None):
+        try:
+            user=User.objects.get(key=pk)
+            if not request_user_belongs_to_user_ngo(request, user):
+                return Response(status=403, data=error_403_json())
+        except User.DoesNotExist:
+            return Response(status=404)
+        try:
+            password=request.data.get('password')
+            confirmPassword=request.data.get('confirmPassword')
+            currentpassword=request.data.get('currentpassword')
+            if not check_password(currentpassword,user.password):
+               message="current password is wrong"
+               return Response(status=400,data=error_checkone(message))
+            if confirmPassword != password:
+               message="Confirm password do not match"
+               return Response(status=400,data=error_checkone(message))
+            if currentpassword == password:
+               message="old and new passwords should not be same"
+               return Response(status=400,data=error_checkone(message))
+            validate_password(password)
+            user.set_password(password)
+            user.save()
+            return Response(status=201)
+        except ValidationError as e:
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
+    
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def readings(self, request, pk=None):
