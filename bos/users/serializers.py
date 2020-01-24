@@ -24,7 +24,7 @@ from measurements.serializers import MeasurementSerializer
 from ngos.models import NGO
 from resources.models import Resource
 from resources.serializers import ResourceSerializer, ResourceDetailSerializer
-from users.models import User, UserHierarchy, generate_username, UserReading, UserResource, UserGroup
+from users.models import User, UserHierarchy, generate_username, UserReading, UserResource, UserGroup, UserRequest
 
 
 class UserSerializer(ModelSerializer):
@@ -258,4 +258,25 @@ class UserGroupDetailSerializer(ModelSerializer):
 
     class Meta:
         model = UserGroup
+        exclude = ('id',)
+
+
+class UserRequestReadOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    is_active = BooleanField(default=True)
+
+    class Meta:
+        model = UserRequest
+        exclude = ('id',)
+
+
+class UserRequestWriteOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    is_active = BooleanField(default=True)
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+
+    class Meta:
+        model = UserRequest
         exclude = ('id',)

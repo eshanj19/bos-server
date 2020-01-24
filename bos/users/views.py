@@ -45,17 +45,18 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
     request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
-    user_reading_filters_from_request, request_user_belongs_to_reading,error_checkone
+    user_reading_filters_from_request, request_user_belongs_to_reading, error_checkone, \
+    user_request_filters_from_request, request_user_belongs_to_user_request_ngo
 from measurements.models import Measurement
 from resources.models import Resource
 from resources.serializers import ResourceDetailSerializer
-from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy, UserReading
+from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy, UserReading, UserRequest
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
     UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer, \
     UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, UserHierarchyWriteSerializer, \
-    UserEditRestrictedDetailSerializer
+    UserEditRestrictedDetailSerializer, UserRequestReadOnlySerializer, UserRequestWriteOnlySerializer
 
 
 class UserViewSet(ViewSet):
@@ -925,6 +926,88 @@ class UserReadingViewSet(ViewSet):
             return Response(status=403, data=error_403_json())
 
         user_reading.delete()
+        return Response(status=204)
+
+
+class UserRequestViewSet(ViewSet):
+
+    def list(self, request):
+        # TODO
+        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+            return Response(status=403, data=error_403_json())
+
+        user_request_filters, search_filters = user_request_filters_from_request(request.GET)
+        ordering = request.GET.get('ordering', None)
+        common_filters = {
+            'ngo': request.user.ngo,
+        }
+        filters = {**common_filters, **user_request_filters}
+
+        queryset = UserRequest.objects.filter(search_filters, **filters)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        paginator = BOSPageNumberPagination()
+        result = paginator.paginate_queryset(queryset, request)
+        serializer = UserRequestReadOnlySerializer(result, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def create(self, request):
+        # TODO
+        # if not has_permission(request, PERMISSION_CAN_ADD_READING):
+        #     return Response(status=403, data=error_403_json())
+        if not request.user:
+            return Response(status=403, data=error_403_json())
+
+        create_data = request.data.copy()
+
+        try:
+            user_request_data = {}
+            user_request_data['first_name'] = create_data.get('first_name', None)
+            user_request_data['middle_name'] = create_data.get('middle_name', None)
+            user_request_data['last_name'] = create_data.get('last_name', None)
+            user_request_data['gender'] = create_data.get('gender', None)
+            user_request_data['status'] = "pending"
+            user_request_data['role'] = "coach"
+
+            user_request_data['ngo'] = request.user.ngo.key
+
+            user_request_serializer = UserRequestWriteOnlySerializer(data=user_request_data)
+            if not user_request_serializer.is_valid():
+                raise ValidationException(user_request_serializer.errors)
+            user_request_serializer.save()
+
+            return Response(user_request_serializer.data, status=201)
+
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+    def retrieve(self, request, pk=None):
+        # TODO
+        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+            return Response(status=403, data=error_403_json())
+
+        queryset = UserRequest.objects.all()
+        item = get_object_or_404(queryset, key=pk)
+        serializer = UserRequestReadOnlySerializer(item)
+        return Response(serializer.data)
+
+    # def update(self, request, pk=None):
+    #     return Response(serializer.errors, status=400)
+
+    def destroy(self, request, pk=None):
+        # TODO
+        if not has_permission(request, PERMISSION_CAN_DESTROY_READING):
+            return Response(status=403, data=error_403_json())
+
+        try:
+            user_request = UserRequest.objects.get(key=pk)
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_user_request_ngo(request, user_request):
+            return Response(status=403, data=error_403_json())
+
+        user_request.delete()
         return Response(status=204)
 
 

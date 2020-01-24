@@ -189,13 +189,13 @@ def user_reading_filters_from_request(request_data):
     available_user_reading_filters = ['is_active']
     available_user_reading_search_filters = ['measurement','athlete']
 
-    for available_user_group_filter in available_user_reading_filters:
-        if available_user_group_filter in request_data:
-            value = request_data.get(available_user_group_filter)
+    for available_user_reading_filter in available_user_reading_filters:
+        if available_user_reading_filter in request_data:
+            value = request_data.get(available_user_reading_filter)
             if value.lower() == 'false':
-                user_reading_filter[available_user_group_filter] = False
+                user_reading_filter[available_user_reading_filter] = False
             else:
-                user_reading_filter[available_user_group_filter] = True
+                user_reading_filter[available_user_reading_filter] = True
 
     search_filter = Q()
     for available_user_reading_search_filter in available_user_reading_search_filters:
@@ -207,6 +207,29 @@ def user_reading_filters_from_request(request_data):
                 search_filter = search_filter & Q(measurement__key=value)
 
     return user_reading_filter, search_filter
+
+
+def user_request_filters_from_request(request_data):
+    user_request_filter = {}
+    available_user_reading_filters = ['is_active']
+    available_user_request_search_filters = ['first_name']
+
+    for available_user_request_filter in available_user_reading_filters:
+        if available_user_request_filter in request_data:
+            value = request_data.get(available_user_request_filter)
+            if value.lower() == 'false':
+                user_request_filter[available_user_request_filter] = False
+            else:
+                user_request_filter[available_user_request_filter] = True
+
+    search_filter = Q()
+    for available_user_request_search_filter in available_user_request_search_filters:
+        if available_user_request_search_filter in request_data:
+            value = request_data.get(available_user_request_search_filter)
+            if available_user_request_search_filter == 'first_name':
+                search_filter = search_filter & (Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+
+    return user_request_filter, search_filter
 
 
 def convert_validation_error_into_response_error(validation_error):
@@ -259,6 +282,12 @@ def request_user_belongs_to_resource(request, resource):
 
 def request_user_belongs_to_reading(request, reading):
     if request.user and request.user.ngo and request.user.ngo.key == reading.ngo.key:
+        return True
+    return False
+
+
+def request_user_belongs_to_user_request_ngo(request, user_request):
+    if request.user and request.user.ngo and request.user.ngo.key == user_request.ngo.key:
         return True
     return False
 
