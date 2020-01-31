@@ -238,8 +238,6 @@ def convert_validation_error_into_response_error(validation_error):
 def error_checkone(message):
     return {MESSAGE_KEY:_(message)}
 
-
-
 def error_400_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_400')}
 
