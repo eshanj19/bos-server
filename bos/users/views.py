@@ -1011,6 +1011,23 @@ class UserRequestViewSet(ViewSet):
         return Response(status=204)
 
 
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def resetStatus(self,request,pk=None):
+        
+        try:
+            user_request=UserRequest.objects.filter(key=pk).first()
+           
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_user_request_ngo(request,user_request):
+            return Response(status=403, data=error_403_json())
+        
+        user_request.status = request.data.get('status')
+        user_request.save()
+        return Response(status=204)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def is_authenticated(request):
