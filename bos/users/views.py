@@ -1017,7 +1017,7 @@ class UserRequestViewSet(ViewSet):
         
         try:
             user_request=UserRequest.objects.filter(key=pk).first()
-            print(user_request.status)
+           
         except UserRequest.DoesNotExist:
             return Response(status=404)
 
