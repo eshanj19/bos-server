@@ -1057,6 +1057,7 @@ def login_mobile_view(request):
                 'ngo_name': user.ngo.name if user.ngo else None,
                 'permissions': user.get_all_permissions(),
                 'role': user.role,
+                'gender': user.gender,
                 'language': user.language,
                 'token': auth_token.token,
                 'first_name': user.first_name,
