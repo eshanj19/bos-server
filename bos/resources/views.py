@@ -61,9 +61,9 @@ class ResourceViewSet(ViewSet):
 
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-
         resource_type = request.data.get('type', None)
         resource_data = request.data.get('data', None)
+   
         if type(resource_data) == list:
             return Response(status=400, data=error_400_json())
         if not resource_type:
@@ -92,6 +92,7 @@ class ResourceViewSet(ViewSet):
         try:
             with transaction.atomic():
                 serializer = ResourceSerializer(data=create_data)
+              
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
 

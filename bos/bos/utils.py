@@ -239,13 +239,16 @@ def error_checkone(message):
     return {MESSAGE_KEY:_(message)}
 
 
-
 def error_400_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_400')}
 
 
 def error_403_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_403')}
+
+
+def request_status(message):
+    return {MESSAGE_KEY:_(message)}
 
 
 def error_404_json():

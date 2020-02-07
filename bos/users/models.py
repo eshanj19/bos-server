@@ -272,6 +272,7 @@ class UserRequest(models.Model):
     ngo = models.ForeignKey('ngos.NGO', null=True,
                             blank=True, on_delete=models.PROTECT)
     is_active = models.BooleanField(default=True, blank=True)
+    data = JSONField()
     role = models.CharField(max_length=10, choices=User.ROLES,
                             null=False, blank=False)
     gender = models.CharField(max_length=10, choices=User.GENDERS,

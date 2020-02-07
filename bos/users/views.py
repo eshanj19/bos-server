@@ -45,7 +45,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
     request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
-    user_reading_filters_from_request, request_user_belongs_to_reading, error_checkone, \
+    user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
     user_request_filters_from_request, request_user_belongs_to_user_request_ngo
 from measurements.models import Measurement
 from resources.models import Resource
@@ -140,8 +140,8 @@ class UserViewSet(ViewSet):
         except User.DoesNotExist:
             return Response(status=404)
         queryset = Resource.objects.filter(Q(is_active=True) & (
-            Q(userresource__user=user) | Q(ngoregistrationresource__ngo=request.user.ngo) |
-            Q(usergroup__users__in=[user]))).distinct()
+                Q(userresource__user=user) | Q(ngoregistrationresource__ngo=request.user.ngo) |
+                Q(usergroup__users__in=[user]))).distinct()
         serializer = ResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
@@ -159,24 +159,24 @@ class UserViewSet(ViewSet):
     @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
     def reset_password(self, request, pk=None):
         try:
-            user=User.objects.get(key=pk)
+            user = User.objects.get(key=pk)
             if not request_user_belongs_to_user_ngo(request, user):
                 return Response(status=403, data=error_403_json())
         except User.DoesNotExist:
             return Response(status=404)
         try:
-            password=request.data.get('password')
-            confirmPassword=request.data.get('confirmPassword')
-            currentpassword=request.data.get('currentpassword')
-            if not check_password(currentpassword,user.password):
-               message="current password is wrong"
-               return Response(status=400,data=error_checkone(message))
+            password = request.data.get('password')
+            confirmPassword = request.data.get('confirmPassword')
+            currentpassword = request.data.get('currentpassword')
+            if not check_password(currentpassword, user.password):
+                message = "current password is wrong"
+                return Response(status=400, data=error_checkone(message))
             if confirmPassword != password:
-               message="Confirm password do not match"
-               return Response(status=400,data=error_checkone(message))
+                message = "Confirm password do not match"
+                return Response(status=400, data=error_checkone(message))
             if currentpassword == password:
-               message="old and new passwords should not be same"
-               return Response(status=400,data=error_checkone(message))
+                message = "old and new passwords should not be same"
+                return Response(status=400, data=error_checkone(message))
             validate_password(password)
             user.set_password(password)
             user.save()
@@ -184,7 +184,6 @@ class UserViewSet(ViewSet):
         except ValidationError as e:
             error = convert_validation_error_into_response_error(e)
             return Response(error, status=400)
-    
 
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def readings(self, request, pk=None):
@@ -518,7 +517,7 @@ class CoachViewSet(ViewSet):
                 return Response(serializer.data, status=201)
 
         except IntegrityError as e:
-            return Response(status=400,data=[{'username': 'This username is taken'}])
+            return Response(status=400, data=[{'username': 'This username is taken'}])
         except ValidationException as e:
             return Response(status=400, data=e.errors)
         except ValidationError as e:
@@ -970,7 +969,7 @@ class UserRequestViewSet(ViewSet):
             user_request_data['role'] = "coach"
 
             user_request_data['ngo'] = request.user.ngo.key
-
+            user_request_data['data'] = create_data.get('data', {})
             user_request_serializer = UserRequestWriteOnlySerializer(data=user_request_data)
             if not user_request_serializer.is_valid():
                 raise ValidationException(user_request_serializer.errors)
@@ -991,8 +990,17 @@ class UserRequestViewSet(ViewSet):
         serializer = UserRequestReadOnlySerializer(item)
         return Response(serializer.data)
 
-    # def update(self, request, pk=None):
-    #     return Response(serializer.errors, status=400)
+    def update(self, request, pk=None):
+        try:
+            user_request = UserRequest.objects.get(key=pk)
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        serializer = UserRequestWriteOnlySerializer(user_request, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
         # TODO
@@ -1010,22 +1018,88 @@ class UserRequestViewSet(ViewSet):
         user_request.delete()
         return Response(status=204)
 
-
     @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
-    def resetStatus(self,request,pk=None):
-        
+    def request_accept(self, request, pk=None):
+
         try:
-            user_request=UserRequest.objects.filter(key=pk).first()
-           
+            user_request = UserRequest.objects.filter(key=pk, status="pending").first()
+
         except UserRequest.DoesNotExist:
             return Response(status=404)
 
-        if not request_user_belongs_to_user_request_ngo(request,user_request):
-            return Response(status=403, data=error_403_json())
-        
-        user_request.status = request.data.get('status')
+        coach_data = {}
+        coach_data['first_name'] = user_request.first_name
+        coach_data['middle_name'] = user_request.middle_name
+        coach_data['last_name'] = user_request.last_name
+        coach_data['status'] = user_request.status
+        coach_data['gender'] = user_request.gender
+        coach_data['username'] = request.data.get('username')
+        coach_data['ngo'] = request.user.ngo.key
+
+        coach_reading_data = {}
+        coach_reading_data = user_request.data
+
+        password = request.data.get('password')
+        confirm_password = request.data.get('confirmpassword')
+
+        try:
+            with transaction.atomic():
+                if confirm_password != password:
+                    raise ValidationException("password do not match")
+                validate_password(password)
+                validate_password(confirm_password)
+
+                serializer = CoachSerializer(data=coach_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                coach = serializer.save()
+                coach.set_password(password)
+                coach.save()
+
+            coach_reading_measurements = coach_reading_data.get('measurements', [])
+
+            for coach_reading_measurement in coach_reading_measurements:
+                user_coach_data = {}
+                user_coach_data['user'] = coach.key
+                user_coach_data['ngo'] = request.user.ngo.key
+                user_coach_data['by_user'] = request.user.key
+                user_coach_data['entered_by'] = request.user.key
+                user_coach_data['measurement'] = coach_reading_measurement['key']
+                user_coach_data['value'] = coach_reading_measurement['value']
+
+                user_reading_serializer = UserReadingSerializer(data=user_coach_data)
+                if not user_reading_serializer.is_valid():
+                    raise ValidationException(user_reading_serializer.errors)
+                user_reading_serializer.save()
+
+            user_request.status = "Accepted"
+            user_request.save()
+            print(user_request.status)
+        except IntegrityError as e:
+            message = "username is already taken"
+            return Response(status=400, data=error_checkone(message))
+        except ValidationException as e:
+            return Response(status=400, data=error_checkone(e.errors))
+        except ValidationError as e:
+            return Response(status=400, data=e.errors)
+
+        message = "Accepted"
+        return Response(status=200, data=request_status(message))
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def request_reject(self, request, pk=None):
+        try:
+            user_request = UserRequest.objects.filter(key=pk, status="pending").first()
+
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+
+        user_request.status = "Rejected"
         user_request.save()
-        return Response(status=204)
+
+        message = "Rejected"
+        return Response(status=200, data=request_status(message))
 
 
 @api_view(['GET'])
