@@ -1075,7 +1075,7 @@ class UserRequestViewSet(ViewSet):
 
             user_request.status = "Accepted"
             user_request.save()
-            print(user_request.status)
+            
         except IntegrityError as e:
             message = "username is already taken"
             return Response(status=400, data=error_checkone(message))
