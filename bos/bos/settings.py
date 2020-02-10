@@ -34,7 +34,7 @@ DEBUG = True
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.0.101'
 # HOST_IP = '192.168.86.224'
-HOST_IP = '192.168.0.122'
+HOST_IP = '192.168.0.123'
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.1.100'
 HOST_IP_PORT = HOST_IP + ':3000'
@@ -209,8 +209,8 @@ logging.config.dictConfig({
     'loggers': {
         # root logger
         '': {
-            'level': 'WARNING',
-            # 'level': 'DEBUG',
+            # 'level': 'WARNING',
+            'level': 'DEBUG',
             'handlers': ['console'],
         },
     },
