@@ -909,8 +909,18 @@ class UserReadingViewSet(ViewSet):
         serializer = UserReadingSerializer(item)
         return Response(serializer.data)
 
-    # def update(self, request, pk=None):
-    #     return Response(serializer.errors, status=400)
+    def update(self, request, pk=None):
+        try:
+            user_reading = UserReading.objects.get(key=pk)
+
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        user_reading.value = request.data.get('value')
+        user_reading.is_active = request.data.get('is_active')
+        user_reading.save()
+        serializer = UserReadingSerializer(user_reading)
+        return Response(serializer.data)
 
     def destroy(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_DESTROY_READING):
