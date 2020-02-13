@@ -17,10 +17,10 @@ import json
 
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404
-
+from django.shortcuts import get_object_or_404
 # Create your views here.
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos.constants import METHOD_POST
@@ -33,7 +33,6 @@ from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMIS
 from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource
 from resources.models import Resource
 from resources.serializers import ResourceSerializer
-from rest_framework.response import Response
 
 
 class ResourceViewSet(ViewSet):
@@ -180,6 +179,9 @@ class ResourceViewSet(ViewSet):
         if resource_type == Resource.TRAINING_SESSION and not has_permission(request,
                                                                              PERMISSION_CAN_CHANGE_TRAINING_SESSION):
             return Response(status=403, data=error_403_json())
+        if resource_type == Resource.REGISTRATION_FORM and not has_permission(request,
+                                                                              PERMISSION_CAN_CHANGE_REGISTRATION_FORM):
+            return Response(status=403, data=error_403_json())
 
         resource.is_active = False
         resource.save()
@@ -202,6 +204,9 @@ class ResourceViewSet(ViewSet):
             return Response(status=403, data=error_403_json())
         if resource_type == Resource.TRAINING_SESSION and not has_permission(request,
                                                                              PERMISSION_CAN_CHANGE_TRAINING_SESSION):
+            return Response(status=403, data=error_403_json())
+        if resource_type == Resource.REGISTRATION_FORM and not has_permission(request,
+                                                                              PERMISSION_CAN_CHANGE_REGISTRATION_FORM):
             return Response(status=403, data=error_403_json())
 
         resource.is_active = True

@@ -101,7 +101,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLES,
                             null=False, blank=False)
     gender = models.CharField(max_length=10, choices=GENDERS,
-                            null=False, blank=False)
+                              null=False, blank=False)
     language = models.CharField(
         max_length=5, choices=LANGUAGES, default=ENGLISH, null=False, blank=True)
     reset_password = models.BooleanField(default=True)
@@ -112,7 +112,7 @@ class User(AbstractUser):
     def name(self):
         return ''.join(
             [self.first_name, ' ', self.middle_name, ' ', self.last_name])
-    
+
     @property
     def full_name(self):
         if self.middle_name:
@@ -121,7 +121,6 @@ class User(AbstractUser):
         else:
             return ''.join(
                 [self.first_name, ' ', self.last_name])
-            
 
     class Meta:
         db_table = 'users'
@@ -185,6 +184,7 @@ class UserReading(models.Model):
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)
+    recorded_at = models.DateTimeField(auto_now=False, auto_now_add=False, blank=False, null=False)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
 
