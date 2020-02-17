@@ -1,0 +1,342 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-02-17 12:43+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: bos/utils.py:243
+msgid "ERROR_MESSAGE_400"
+msgstr ""
+
+#: bos/utils.py:247
+msgid "ERROR_MESSAGE_403"
+msgstr ""
+
+#: bos/utils.py:255
+msgid "ERROR_MESSAGE_404"
+msgstr ""
+
+#: bos/utils.py:259
+msgid "ERROR_MESSAGE_500"
+msgstr ""
+
+#: conv.py:19
+msgid "ra.action.save"
+msgstr ""
+
+#: conv.py:21
+msgid "ra.action.create"
+msgstr ""
+
+#: conv.py:23
+msgid "ra.action.edit"
+msgstr ""
+
+#: conv.py:25
+msgid "ra.action.delete"
+msgstr ""
+
+#: conv.py:27
+msgid "ra.action.add_filter"
+msgstr ""
+
+#: conv.py:29
+msgid "ra.action.add"
+msgstr ""
+
+#: conv.py:31
+msgid "ra.action.back"
+msgstr ""
+
+#: conv.py:33
+msgid "ra.action.bulk_actions"
+msgstr ""
+
+#: conv.py:35
+msgid "ra.action.bulk_cancel"
+msgstr ""
+
+#: conv.py:37
+msgid "ra.action.clear_input_value"
+msgstr ""
+
+#: conv.py:39
+msgid "ra.action.export"
+msgstr ""
+
+#: conv.py:41
+msgid "ra.action.list"
+msgstr ""
+
+#: conv.py:43
+msgid "ra.action.remove_filter"
+msgstr ""
+
+#: conv.py:45
+msgid "ra.action.remove"
+msgstr ""
+
+#: conv.py:47
+msgid "ra.action.search"
+msgstr ""
+
+#: conv.py:49
+msgid "ra.action.show"
+msgstr ""
+
+#: conv.py:51
+msgid "ra.boolean.true"
+msgstr ""
+
+#: conv.py:53
+msgid "ra.boolean.false"
+msgstr ""
+
+#: conv.py:55
+msgid "ra.action.refresh"
+msgstr ""
+
+#: conv.py:57
+msgid "ra.validation.required"
+msgstr ""
+
+#: conv.py:59
+msgid "ra.validation.minLength"
+msgstr ""
+
+#: conv.py:61
+msgid "ra.validation.maxLength"
+msgstr ""
+
+#: conv.py:63
+msgid "ra.validation.minValue"
+msgstr ""
+
+#: conv.py:65
+msgid "ra.validation.maxValue"
+msgstr ""
+
+#: conv.py:67
+msgid "ra.validation.number"
+msgstr ""
+
+#: conv.py:69
+msgid "ra.validation.email"
+msgstr ""
+
+#: conv.py:71
+msgid "ra.validation.oneOf"
+msgstr ""
+
+#: conv.py:73
+msgid "ra.validation.regex"
+msgstr ""
+
+#: conv.py:75
+msgid "ra.title.first_name"
+msgstr ""
+
+#: conv.py:77
+msgid "ra.title.middle_name"
+msgstr ""
+
+#: conv.py:79
+msgid "ra.title.last_name"
+msgstr ""
+
+#: conv.py:81
+msgid "ra.title.current_password"
+msgstr ""
+
+#: conv.py:83
+msgid "ra.title.password"
+msgstr ""
+
+#: conv.py:85
+msgid "ra.title.gender"
+msgstr ""
+
+#: conv.py:87
+msgid "ra.title.full_name"
+msgstr ""
+
+#: conv.py:89
+msgid "ra.title.email"
+msgstr ""
+
+#: conv.py:91
+msgid "ra.action.active"
+msgstr ""
+
+#: conv.py:93
+msgid "ra.title.created_on"
+msgstr ""
+
+#: conv.py:95
+msgid "ra.title.last_mod"
+msgstr ""
+
+#: conv.py:97
+msgid "ra.title.username"
+msgstr ""
+
+#: conv.py:99
+msgid "ra.title.confirm_password"
+msgstr ""
+
+#: conv.py:101
+msgid "ra.title.permission_group"
+msgstr ""
+
+#: conv.py:103
+msgid "ra.title.name"
+msgstr ""
+
+#: conv.py:105
+msgid "ra.title.users"
+msgstr ""
+
+#: conv.py:107
+msgid "ra.title.resources"
+msgstr ""
+
+#: conv.py:109
+msgid "ra.option.curriculum"
+msgstr ""
+
+#: conv.py:111
+msgid "ra.option.training_session"
+msgstr ""
+
+#: conv.py:113
+msgid "ra.option.file"
+msgstr ""
+
+#: conv.py:115
+msgid "ra.option.registration_form"
+msgstr ""
+
+#: conv.py:117
+msgid "ra.title.description"
+msgstr ""
+
+#: conv.py:119
+msgid "ra.title.day"
+msgstr ""
+
+#: conv.py:121
+msgid "ra.title.type"
+msgstr ""
+
+#: conv.py:123
+msgid "ra.title.label"
+msgstr ""
+
+#: conv.py:125
+msgid "ra.title.uom"
+msgstr ""
+
+#: conv.py:127
+msgid "ra.title.input"
+msgstr ""
+
+#: conv.py:129
+msgid "ra.title.measurement"
+msgstr ""
+
+#: conv.py:131
+msgid "ra.title.athlete"
+msgstr ""
+
+#: conv.py:133
+msgid "ra.title.value"
+msgstr ""
+
+#: conv.py:135
+msgid "ra.action.submit"
+msgstr ""
+
+#: conv.py:137
+msgid "ra.title.name_of_ngo"
+msgstr ""
+
+#: conv.py:139
+msgid "ra.title.first_name_ngo_admin"
+msgstr ""
+
+#: conv.py:141
+msgid "ra.title.last_name_ngo_admin"
+msgstr ""
+
+#: conv.py:143
+msgid "ra.title.username_ngo_admin"
+msgstr ""
+
+#: conv.py:145
+msgid "ra.title.emailaddress_ngo_admin"
+msgstr ""
+
+#: conv.py:147
+msgid "ra.menu.reading"
+msgstr ""
+
+#: conv.py:149
+msgid "ra.menu.measurement_type"
+msgstr ""
+
+#: conv.py:151
+msgid "ra.menu.ngo"
+msgstr ""
+
+#: conv.py:153
+msgid "ra.title.set_parent"
+msgstr ""
+
+#: conv.py:155
+msgid "ra.title.names_of_permission_group"
+msgstr ""
+
+#: conv.py:157
+msgid "ra.title.is_active"
+msgstr ""
+
+#: conv.py:159
+msgid "ra.title.view_edit_organisation"
+msgstr ""
+
+#: users/models.py:102
+msgid "user with this email already exists"
+msgstr ""
+
+#: users/views.py:175
+msgid "current password is wrong"
+msgstr ""
+
+#: users/views.py:178
+msgid "Confirm password do not match"
+msgstr ""
+
+#: users/views.py:181
+msgid "old and new passwords should not be same"
+msgstr ""
+
+#: users/views.py:690
+msgid "Welcome to my site"
+msgstr ""
+
+#: users/views.py:1065
+msgid "password do not match"
+msgstr ""

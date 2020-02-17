@@ -16,6 +16,7 @@
 
 import logging.config
 import os
+from django.utils.translation import ugettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -62,7 +63,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'bos.language_middleware.LocaleMiddleware',
+    'bos.lang_based_on_url_middleware.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'bos.constants.DisableCSRFMiddleware',
@@ -141,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-IN'
+LANGUAGE_CODE = 'en_IN'
 
 TIME_ZONE = 'UTC'
 
@@ -152,6 +153,7 @@ USE_L10N = True
 USE_TZ = True
 
 LOCALE_PATHS = ['locale']
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

@@ -99,7 +99,7 @@ class User(AbstractUser):
                              null=True,
                              blank=True,
                              error_messages={
-                                 'unique': _("user with this email already exists."),
+                                 'unique': _("user with this email already exists"),
                              })
     password = models.CharField(max_length=1024, null=True, blank=True)
     is_active = models.BooleanField(default=True, blank=True)

@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from django.utils.translation import gettext as _
 
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
@@ -101,6 +102,12 @@ class MeasurementViewSet(ViewSet):
             return Response(status=404)
         item.delete()
         return Response(status=204)
+
+    def checking(self, request):
+        sentence = 'Welcome to my site'
+        output = _(sentence)
+        serializer = MeasurementSerializer(output)
+        return Response(serializer.data)
 
 
 class MeasurementTypeViewSet(ViewSet):

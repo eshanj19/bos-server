@@ -27,6 +27,9 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from django.utils.translation import gettext as _
+from django.utils import translation
+from django.utils.translation import activate, get_language_info
 
 from bos.constants import METHOD_GET
 from bos.constants import METHOD_POST
@@ -686,6 +689,20 @@ class UserGroupViewSet(ViewSet):
         user_group.delete()
         return Response(status=204)
 
+    @action(methods=['GET'], detail=False)
+    def checking(self, request):
+        # sentence = 'Welcome to my site.'
+        output = _('Welcome to my site')
+
+        return Response(output)
+
+        # output = _('Welcome to my site')
+        # translation.activate('mr')
+        # request.LANGUAGE_CODE = translation.get_language()
+        # print(output)
+        # return Response(status=200)
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -1057,7 +1074,8 @@ class UserRequestViewSet(ViewSet):
         try:
             with transaction.atomic():
                 if confirm_password != password:
-                    raise ValidationException("password do not match")
+                    output=_("password do not match")
+                    raise ValidationException(output)
                 validate_password(password)
                 validate_password(confirm_password)
 
