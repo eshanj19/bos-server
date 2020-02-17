@@ -27,12 +27,16 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos import utils
-from bos.constants import GroupType, METHOD_POST, METHOD_GET
+from bos.constants import GroupType, METHOD_POST, METHOD_GET, MESSAGE_KEY
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN, CanChangeCustomUserGroup, DEFAULT_PERMISSIONS_NGO_ADMIN, \
-    CanViewMeasurement
+from bos.permissions import CanChangeCustomUserGroup, DEFAULT_PERMISSIONS_NGO_ADMIN, \
+    has_permission, PERMISSION_BOS_ADMIN, BOSAdmin, CanViewPermissionGroup, CanViewFile, CanViewCurriculum, \
+    CanViewTrainingSession, CanAddTrainingSession, CanViewUserHierarchy, PERMISSION_CAN_CHANGE_USER, \
+    PERMISSION_CAN_CHANGE_ADMIN, PERMISSION_CAN_CHANGE_COACH, CanChangeUserHierarchy, CanViewMeasurement, \
+    DEFAULT_PERMISSIONS_COACH, CanViewResource, CanChangeUser, CanChangeCoach, CanChangeAdmin, PERMISSION_CAN_VIEW_NGO, \
+    PERMISSION_CAN_ADD_NGO, PERMISSION_CAN_CHANGE_NGO, PERMISSION_CAN_DESTROY_NGO
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer, MeasurementDetailSerializer
@@ -41,13 +45,14 @@ from ngos.serializers import NGOSerializer, NGORegistrationResourceSerializer, N
 from resources.models import Resource
 from resources.serializers import ResourceSerializer, ResourceDetailSerializer
 from users.models import User, UserHierarchy
-from users.serializers import UserSerializer, PermissionGroupSerializer, UserHierarchySerializer, \
-    UserHierarchyWriteSerializer
+from users.serializers import UserSerializer, PermissionGroupSerializer, UserHierarchyWriteSerializer
 
 
 class NGOViewSet(ViewSet):
 
     def list(self, request):
+        if not has_permission(request, PERMISSION_CAN_VIEW_NGO):
+            return Response(status=403)
 
         user_filters, search_filters = ngo_filters_from_request(request.GET)
         ordering = request.GET.get('ordering', None)
@@ -62,7 +67,9 @@ class NGOViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
-        # TODO
+        if not has_permission(request, PERMISSION_CAN_ADD_NGO):
+            return Response(status=403)
+
         try:
             with transaction.atomic():
                 serializer = NGOSerializer(data=request.data)
@@ -88,6 +95,7 @@ class NGOViewSet(ViewSet):
                     "first_name": first_name,
                     "last_name": last_name,
                     "email": email,
+                    "gender": "male",
                     "username": username,
                     "ngo": ngo.key
                 }
@@ -106,7 +114,7 @@ class NGOViewSet(ViewSet):
                 ngo_admin.save()
 
                 admin_group_name = utils.get_ngo_group_name(
-                    ngo_admin, GroupType.ADMIN.value)
+                    ngo, GroupType.ADMIN.value)
                 admin_group, created = Group.objects.get_or_create(
                     name=admin_group_name)
 
@@ -115,9 +123,20 @@ class NGOViewSet(ViewSet):
                     try:
                         permission = Permission.objects.get(
                             codename=code_name, name=name)
-                        # TODO
-                        # ct = ContentType.objects.get_for_model(Project)
                         admin_group.permissions.add(permission)
+                    except Permission.DoesNotExist:
+                        continue
+
+                coach_group_name = utils.get_ngo_group_name(
+                    ngo, GroupType.COACH.value)
+                coach_group, created = Group.objects.get_or_create(
+                    name=coach_group_name)
+
+                for code_name, name, _ in DEFAULT_PERMISSIONS_COACH:
+                    try:
+                        permission = Permission.objects.get(
+                            codename=code_name, name=name)
+                        coach_group.permissions.add(permission)
                     except Permission.DoesNotExist:
                         continue
 
@@ -130,12 +149,18 @@ class NGOViewSet(ViewSet):
             return Response({"password": e}, status=400)
 
     def retrieve(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_NGO):
+            return Response(status=403)
+
         queryset = NGO.objects.all()
         item = get_object_or_404(queryset, key=pk)
         serializer = NGOSerializer(item)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_CHANGE_NGO):
+            return Response(status=403)
+
         try:
             item = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
@@ -147,6 +172,9 @@ class NGOViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_NGO):
+            return Response(status=403)
+
         try:
             item = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
@@ -154,8 +182,7 @@ class NGOViewSet(ViewSet):
         item.delete()
         return Response(status=204)
 
-    # TODO permissions
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[BOSAdmin])
     def deactivate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -165,8 +192,7 @@ class NGOViewSet(ViewSet):
         item.save()
         return Response(status=204)
 
-    # TODO permissions
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[BOSAdmin])
     def activate(self, request, pk=None):
         try:
             item = NGO.objects.get(key=pk)
@@ -176,9 +202,7 @@ class NGOViewSet(ViewSet):
         item.save()
         return Response(status=204)
 
-        # TODO permissions
-
-    @action(detail=True, methods=[METHOD_GET])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewPermissionGroup])
     def permission_groups(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -200,7 +224,7 @@ class NGOViewSet(ViewSet):
         serializer = MeasurementSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewFile])
     def files(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -212,7 +236,7 @@ class NGOViewSet(ViewSet):
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewCurriculum])
     def curricula(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -224,7 +248,7 @@ class NGOViewSet(ViewSet):
         serializer = ResourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewTrainingSession])
     def training_sessions(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -270,9 +294,8 @@ class NGOViewSet(ViewSet):
         }
         return Response(data=serializer.data.get('resource'))
 
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanAddTrainingSession])
     def mark_as_coach_registration_resource(self, request, pk=None):
-        # TODO
         try:
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
@@ -306,9 +329,8 @@ class NGOViewSet(ViewSet):
 
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanAddTrainingSession])
     def mark_as_athlete_registration_resource(self, request, pk=None):
-        # TODO
         try:
             ngo = NGO.objects.get(key=pk)
         except NGO.DoesNotExist:
@@ -364,23 +386,6 @@ class NGOViewSet(ViewSet):
         serializer = NGORegistrationResourceDetailSerializer(resource)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
-    def all_resources(self, request, pk=None):
-        try:
-            ngo = NGO.objects.get(key=pk)
-        except NGO.DoesNotExist:
-            return Response(status=404)
-        if ngo != request.user.ngo:
-            return Response(status=403)
-        try:
-            resources = Resource.objects.filter(
-                ngo=ngo)
-        except Resource.DoesNotExist:
-            return Response(status=404)
-
-        serializer = ResourceSerializer(resources, many=True)
-        return Response(serializer.data)
-
     @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeCustomUserGroup])
     def all_users(self, request, pk=None):
         try:
@@ -398,7 +403,6 @@ class NGOViewSet(ViewSet):
         serializer = UserSerializer(all_users, many=True)
         return Response(serializer.data)
 
-    # TODO permissions
     @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
     def athlete_registration_resource(self, request, pk=None):
         try:
@@ -408,14 +412,14 @@ class NGOViewSet(ViewSet):
 
         try:
             resource = NGORegistrationResource.objects.get(
-                ngo=ngo, type=NGORegistrationResource.ATHLETE,resource__is_active=True)
+                ngo=ngo, type=NGORegistrationResource.ATHLETE, resource__is_active=True)
         except NGORegistrationResource.DoesNotExist:
             return Response(status=404)
 
         serializer = NGORegistrationResourceDetailSerializer(resource)
         return Response(serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewUserHierarchy])
     def user_hierarchy(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -456,7 +460,7 @@ class NGOViewSet(ViewSet):
 
         return Response(response_data)
 
-    @action(detail=True, methods=[METHOD_POST])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanChangeUserHierarchy])
     def save_user_hierarchy(self, request, pk=None):
         try:
             ngo = NGO.objects.get(key=pk)
@@ -476,13 +480,11 @@ class NGOViewSet(ViewSet):
 
         except ValidationException as e:
             return Response(e.errors, status=400)
-        return Response(status=201, data={'message': 'Org updated'})
+        return Response(status=201, data={MESSAGE_KEY: 'Organization updated'})
 
     @action(detail=True, methods=[METHOD_POST], permission_classes=[AllowAny])
     def measurements_from_keys(self, request, pk=None):
         # TODO
-
-        print(request.data)
         measurement_keys = request.data.copy()
         if measurement_keys is None or len(measurement_keys) == 0:
             return Response(status=400)
@@ -491,15 +493,15 @@ class NGOViewSet(ViewSet):
         serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
         return Response(data=serializer.data)
 
-    # TODO permissions
-    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanViewMeasurement])
     def all_measurements(self, request, pk=None):
         queryset = Measurement.objects.filter(ngo=request.user.ngo)
         serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
         return Response(data=serializer.data)
 
-    # TODO permissions
-    @action(detail=True, methods=[METHOD_GET], permission_classes=[AllowAny])
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeUser,
+                                                                   CanChangeAdmin,
+                                                                   CanChangeCoach])
     def all_resources(self, request, pk=None):
         queryset = Resource.objects.filter(ngo=request.user.ngo)
         serializer = ResourceDetailSerializer(queryset, read_only=True, many=True)
@@ -513,7 +515,7 @@ def parent_to_child(hierarchy_data):
     for child in children:
         child_key = child.get('key', None)
         if not child_key:
-            print("Child key is None")
+            # print("Child key is None")
             raise ValidationException()
 
         children_keys.append(child_key)

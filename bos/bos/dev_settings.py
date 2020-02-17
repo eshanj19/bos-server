@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'resources',
 ]
 
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -220,8 +219,3 @@ logging.config.dictConfig({
 # EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
-
-GRAPH_MODELS = {
-  'all_applications': True,
-  'group_models': True,
-}

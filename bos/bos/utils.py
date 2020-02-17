@@ -14,12 +14,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from django.db.models import Q
-
-from bos.constants import MESSAGE_KEY
 from django.utils.translation import gettext as _
 
+from bos.constants import MESSAGE_KEY
 from users.models import UserHierarchy, User
-from users.serializers import UserHierarchyReadSerializer, UserHierarchySerializer, UserRestrictedDetailSerializer
+from users.serializers import UserHierarchySerializer, UserRestrictedDetailSerializer
 
 
 def get_ngo_group_name(ngo, name):
@@ -30,9 +29,7 @@ def user_sort_by_value(sort, order):
     order_by = None
     # if sort == 'first_name':
     #     order_by = 'first_name'
-    print(sort, order)
     order_by = sort
-
     if order == 'ASC':
         return order_by
     if order == 'DESC':
@@ -187,7 +184,7 @@ def user_group_filters_from_request(request_data):
 def user_reading_filters_from_request(request_data):
     user_reading_filter = {}
     available_user_reading_filters = ['is_active']
-    available_user_reading_search_filters = ['measurement','athlete']
+    available_user_reading_search_filters = ['measurement', 'athlete']
 
     for available_user_reading_filter in available_user_reading_filters:
         if available_user_reading_filter in request_data:
@@ -202,7 +199,8 @@ def user_reading_filters_from_request(request_data):
         if available_user_reading_search_filter in request_data:
             value = request_data.get(available_user_reading_search_filter)
             if available_user_reading_search_filter == 'athlete':
-                search_filter = search_filter & (Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                search_filter = search_filter & (
+                            Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
             if available_user_reading_search_filter == 'measurement':
                 search_filter = search_filter & Q(measurement__key=value)
 
@@ -235,9 +233,9 @@ def user_request_filters_from_request(request_data):
 def convert_validation_error_into_response_error(validation_error):
     return {'password': validation_error}
 
-def error_checkone(message):
-    return {MESSAGE_KEY:_(message)}
 
+def error_checkone(message):
+    return {MESSAGE_KEY: _(message)}
 
 def error_400_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_400')}

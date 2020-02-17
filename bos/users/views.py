@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from datetime import timedelta, timezone, datetime
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import Group, Permission
@@ -22,8 +23,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, action, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -40,22 +41,22 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP, PERMISSION_CAN_ADD_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_CHANGE_CUSTOM_USER_GROUP, PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_VIEW_PERMISSION_GROUP, PERMISSION_CAN_DESTROY_PERMISSION_GROUP, \
-    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup, \
-    PERMISSION_CAN_VIEW_READING, PERMISSION_CAN_DESTROY_READING
+    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, PERMISSION_CAN_VIEW_READING, \
+    PERMISSION_CAN_DESTROY_READING, PERMISSION_CAN_ADD_READING, CanViewPermissionGroup
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
-    convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_ngo, \
-    request_user_belongs_to_user_ngo, error_403_json, request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
+    convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_user_ngo, error_403_json, \
+    request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
     user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
     user_request_filters_from_request, request_user_belongs_to_user_request_ngo
 from measurements.models import Measurement
 from resources.models import Resource
 from resources.serializers import ResourceDetailSerializer
-from users.models import User, UserGroup, UserResource, MobileAuthToken, UserHierarchy, UserReading, UserRequest
+from users.models import User, UserGroup, UserResource, MobileAuthToken, UserReading, UserRequest
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
-    UserGroupDetailSerializer, UserRestrictedDetailSerializer, UserHierarchyReadSerializer, \
-    UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, UserHierarchyWriteSerializer, \
+    UserGroupDetailSerializer, UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, \
+    UserHierarchyWriteSerializer, \
     UserEditRestrictedDetailSerializer, UserRequestReadOnlySerializer, UserRequestWriteOnlySerializer
 
 
@@ -166,15 +167,15 @@ class UserViewSet(ViewSet):
             return Response(status=404)
         try:
             password = request.data.get('password')
-            confirmPassword = request.data.get('confirmPassword')
-            currentpassword = request.data.get('currentpassword')
-            if not check_password(currentpassword, user.password):
+            confirm_password = request.data.get('confirmPassword')
+            current_password = request.data.get('currentpassword')
+            if not check_password(current_password, user.password):
                 message = "current password is wrong"
                 return Response(status=400, data=error_checkone(message))
-            if confirmPassword != password:
+            if confirm_password != password:
                 message = "Confirm password do not match"
                 return Response(status=400, data=error_checkone(message))
-            if currentpassword == password:
+            if current_password == password:
                 message = "old and new passwords should not be same"
                 return Response(status=400, data=error_checkone(message))
             validate_password(password)
@@ -191,6 +192,10 @@ class UserViewSet(ViewSet):
             user = User.objects.get(key=pk)
         except User.DoesNotExist:
             return Response(status=404)
+
+        if not request_user_belongs_to_user_ngo(request, user):
+            return Response(status=403, data=error_403_json())
+
         queryset = UserReading.objects.filter(user=user)
         serializer = UserReadingReadOnlySerializer(queryset, many=True)
         return Response(data=serializer.data)
@@ -868,10 +873,7 @@ class UserReadingViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
-        # TODO
-        # if not has_permission(request, PERMISSION_CAN_ADD_READING):
-        #     return Response(status=403, data=error_403_json())
-        if not request.user:
+        if not has_permission(request, PERMISSION_CAN_ADD_READING):
             return Response(status=403, data=error_403_json())
 
         create_data = request.data.copy()
@@ -882,8 +884,8 @@ class UserReadingViewSet(ViewSet):
             user_reading_data['ngo'] = create_data.get('ngo', None)
             user_reading_data['resource'] = create_data.get('resource', None)
             user_reading_data['measurement'] = create_data.get('measurement', None)
+            user_reading_data['recorded_at'] = create_data.get('recorded_at', None)
             user_reading_data['value'] = create_data.get('value', None)
-
             user_reading_data['by_user'] = request.user.key
             user_reading_data['entered_by'] = request.user.key
 
@@ -909,8 +911,18 @@ class UserReadingViewSet(ViewSet):
         serializer = UserReadingSerializer(item)
         return Response(serializer.data)
 
-    # def update(self, request, pk=None):
-    #     return Response(serializer.errors, status=400)
+    def update(self, request, pk=None):
+        try:
+            user_reading = UserReading.objects.get(key=pk)
+
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        user_reading.value = request.data.get('value')
+        user_reading.is_active = request.data.get('is_active')
+        user_reading.save()
+        serializer = UserReadingSerializer(user_reading)
+        return Response(serializer.data)
 
     def destroy(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_DESTROY_READING):
@@ -1075,7 +1087,7 @@ class UserRequestViewSet(ViewSet):
 
             user_request.status = "Accepted"
             user_request.save()
-            
+
         except IntegrityError as e:
             message = "username is already taken"
             return Response(status=400, data=error_checkone(message))

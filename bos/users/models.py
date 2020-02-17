@@ -189,6 +189,7 @@ class UserReading(models.Model):
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)
+    recorded_at = models.DateTimeField(auto_now=False, auto_now_add=False, blank=False, null=False)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
 
