@@ -35,7 +35,7 @@ DEBUG = True
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.0.101'
 # HOST_IP = '192.168.86.224'
-HOST_IP = '192.168.0.123'
+HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.0.122'
 # HOST_IP = '192.168.1.100'
 HOST_IP_PORT = HOST_IP + ':3000'
@@ -142,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
-LANGUAGE_CODE = 'en_IN'
+LANGUAGE_CODE = 'en-IN'
 
 TIME_ZONE = 'UTC'
 
