@@ -103,11 +103,7 @@ class MeasurementViewSet(ViewSet):
         item.delete()
         return Response(status=204)
 
-    def checking(self, request):
-        sentence = 'Welcome to my site'
-        output = _(sentence)
-        serializer = MeasurementSerializer(output)
-        return Response(serializer.data)
+
 
 
 class MeasurementTypeViewSet(ViewSet):
