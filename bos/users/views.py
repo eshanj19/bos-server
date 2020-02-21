@@ -23,6 +23,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from mypy.main import a
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -703,7 +704,6 @@ class UserGroupViewSet(ViewSet):
         # return Response(status=200)
 
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -1048,6 +1048,29 @@ class UserRequestViewSet(ViewSet):
         return Response(status=204)
 
     @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def check_username(self, request, pk=None):
+
+        try:
+            _ = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
+
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+        print(request.data.get("username"))
+        username = request.data.get("username")
+        print(username)
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return Response(data={"username": username})
+        else:
+            for i in range(1, 100):
+                temp_username = username + str(i)
+                user = User.objects.filter(username=temp_username).first()
+                if user:
+                    continue
+                break
+            return Response(data={"username": temp_username})
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
     def request_accept(self, request, pk=None):
 
         try:
@@ -1074,7 +1097,7 @@ class UserRequestViewSet(ViewSet):
         try:
             with transaction.atomic():
                 if confirm_password != password:
-                    output=_("password do not match")
+                    output = _("password do not match")
                     raise ValidationException(output)
                 validate_password(password)
                 validate_password(confirm_password)
