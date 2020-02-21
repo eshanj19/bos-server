@@ -50,7 +50,7 @@ PERMISSIONS_TRAINING_SESSION = [PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_
 PERMISSION_CAN_ADD_FILE = ('add_file', 'Can add file', 'resources.add_file')
 PERMISSION_CAN_CHANGE_FILE = ('change_file', 'Can change file', 'resources.change_file')
 PERMISSION_CAN_DESTROY_FILE = ('delete_file', 'Can delete file', 'resources.delete_file')
-PERMISSION_CAN_VIEW_FILE = ('view_file', 'Can view file', 'files.view_file')
+PERMISSION_CAN_VIEW_FILE = ('view_file', 'Can view file', 'resources.view_file')
 PERMISSIONS_FILE = [PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE,
                     PERMISSION_CAN_DESTROY_FILE,
                     PERMISSION_CAN_VIEW_FILE]
