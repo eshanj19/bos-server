@@ -20,7 +20,6 @@ class LocaleMiddleware(MiddlewareMixin):
     def process_request(self, request):
         # language = translation.get_language_from_request(request)
         language = request.META.get('HTTP_ACCEPT_LANGUAGE')
-        print(language)
         translation.activate(language)
         request.LANGUAGE_CODE = translation.get_language()
 

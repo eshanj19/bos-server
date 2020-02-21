@@ -16,7 +16,7 @@
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
-from bos.constants import MESSAGE_KEY
+from bos.constants import MESSAGE_KEY, VALID_FILE_EXTENSIONS
 from users.models import UserHierarchy, User
 from users.serializers import UserHierarchySerializer, UserRestrictedDetailSerializer
 
@@ -200,7 +200,7 @@ def user_reading_filters_from_request(request_data):
             value = request_data.get(available_user_reading_search_filter)
             if available_user_reading_search_filter == 'athlete':
                 search_filter = search_filter & (
-                            Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                        Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
             if available_user_reading_search_filter == 'measurement':
                 search_filter = search_filter & Q(measurement__key=value)
 
@@ -225,7 +225,8 @@ def user_request_filters_from_request(request_data):
         if available_user_request_search_filter in request_data:
             value = request_data.get(available_user_request_search_filter)
             if available_user_request_search_filter == 'first_name':
-                search_filter = search_filter & (Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                search_filter = search_filter & (
+                            Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
 
     return user_request_filter, search_filter
 
@@ -237,6 +238,7 @@ def convert_validation_error_into_response_error(validation_error):
 def error_checkone(message):
     return {MESSAGE_KEY: _(message)}
 
+
 def error_400_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_400')}
 
@@ -246,7 +248,7 @@ def error_403_json():
 
 
 def request_status(message):
-    return {MESSAGE_KEY:_(message)}
+    return {MESSAGE_KEY: _(message)}
 
 
 def error_404_json():
@@ -310,3 +312,9 @@ def find_user_ids_under_users(user_ids, previous_children):
         return previous_children
     else:
         return find_user_ids_under_users(children, previous_children + children)
+
+
+def is_extension_valid(extension):
+    if extension.lower() in VALID_FILE_EXTENSIONS:
+        return True
+    return False

@@ -20,6 +20,7 @@ from django.utils.translation import gettext as _
 
 PUBLIC_KEY_LENGTH_NGO = 10
 PUBLIC_KEY_LENGTH_MEASUREMENT = 10
+PUBLIC_KEY_LENGTH_FILE = 20
 PUBLIC_KEY_LENGTH_MEASUREMENT_TYPE = 10
 PUBLIC_KEY_LENGTH_USER = 10
 PUBLIC_KEY_LENGTH_USER_REQUEST = 10
@@ -58,3 +59,4 @@ class GroupType(Enum):
 
 
 DEFAULT_ROLES = [GroupType.ADMIN.value, GroupType.COACH.value, GroupType.ATHLETE.value]
+VALID_FILE_EXTENSIONS = ['.png', '.jpeg', '.jpg', 'txt', 'mp4', 'mp3', '.pdf']
