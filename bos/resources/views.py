@@ -17,11 +17,10 @@ import json
 import os
 import pathlib
 
-from django.core.files.storage import default_storage
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 # Create your views here.
-from flask_talisman.talisman import get_random_string
+from django.utils.crypto import get_random_string
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
