@@ -23,13 +23,11 @@ from django.core.exceptions import ValidationError
 from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from django.utils.translation import gettext as _
-from django.utils import translation
-from django.utils.translation import activate, get_language_info
 
 from bos.constants import METHOD_GET
 from bos.constants import METHOD_POST
@@ -689,19 +687,6 @@ class UserGroupViewSet(ViewSet):
         user_group.delete()
         return Response(status=204)
 
-    @action(methods=['GET'], detail=False)
-    def checking(self, request):
-        # sentence = 'Welcome to my site.'
-        output = _('Welcome to my site')
-
-        return Response(output)
-
-        # output = _('Welcome to my site')
-        # translation.activate('mr')
-        # request.LANGUAGE_CODE = translation.get_language()
-        # print(output)
-        # return Response(status=200)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -1038,7 +1023,28 @@ class UserRequestViewSet(ViewSet):
         user_request.delete()
         return Response(status=204)
 
-    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanChangeCoach])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def check_username(self, request, pk=None):
+
+        try:
+            _ = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
+
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+        username = request.data.get("username")
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return Response(data={"username": username})
+        else:
+            for i in range(1, 100):
+                temp_username = username + str(i)
+                user = User.objects.filter(username=temp_username).first()
+                if user:
+                    continue
+                break
+            return Response(data={"username": temp_username})
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
     def request_accept(self, request, pk=None):
 
         try:
