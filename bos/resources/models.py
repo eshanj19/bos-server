@@ -14,10 +14,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.crypto import get_random_string
-from django.contrib.postgres.fields import JSONField
-
+from bos.constants import PUBLIC_KEY_LENGTH_RESOURCE, LENGTH_LABEL, LENGTH_DESCRIPTION, \
+    PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE
 from bos.permissions import PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE, PERMISSION_CAN_DESTROY_FILE, \
     PERMISSION_CAN_VIEW_FILE, PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_CHANGE_CURRICULUM, \
     PERMISSION_CAN_DESTROY_CURRICULUM, PERMISSION_CAN_VIEW_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, \
@@ -30,10 +31,9 @@ def generate_resource_key():
     return get_random_string(PUBLIC_KEY_LENGTH_RESOURCE)
 
 
-from bos.constants import PUBLIC_KEY_LENGTH_RESOURCE, LENGTH_LABEL, LENGTH_DESCRIPTION
+def generate_resource_evaluation_key():
+    return get_random_string(PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE)
 
-
-# Should resources label be language specific?
 
 class Resource(models.Model):
     CURRICULUM = 'curriculum'
@@ -84,3 +84,20 @@ class Resource(models.Model):
     def __str__(self):
         return self.label
 
+
+# class EvaluationResource(models.Model):
+#     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, default=generate_resource_evaluation_key,
+#                            unique=True)
+#     data = JSONField()
+#     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
+#     description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=True)
+#     type = models.CharField(choices=Resource.RESOURCE_TEMPLATE_TYPES, max_length=50, null=False, blank=False)
+#     user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
+#     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+#     last_modification_time = models.DateTimeField(auto_now=True)
+#
+#     class Meta:
+#         db_table = 'evaluation_resources'
+#
+#     def __str__(self):
+#         return self.label

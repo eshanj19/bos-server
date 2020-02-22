@@ -29,7 +29,6 @@ def po_to_json(locales, domain, locale_dir):
             key = tuple[0]
             translation = tuple[1]
             if "." in key:
-                print(key)
                 list = key.split(".")
                 arr = list[1]
                 keyname = list[2]
@@ -42,7 +41,6 @@ def po_to_json(locales, domain, locale_dir):
             else:
                 ra[key] = translation
             # obj[locale][tuple[0]] = tuple[1]
-        print(obj)
         with open(locale_file_path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False)
     return
