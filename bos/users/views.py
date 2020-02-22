@@ -45,7 +45,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_CHANGE_CUSTOM_USER_GROUP, PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_VIEW_PERMISSION_GROUP, PERMISSION_CAN_DESTROY_PERMISSION_GROUP, \
     PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, PERMISSION_CAN_VIEW_READING, \
-    PERMISSION_CAN_DESTROY_READING, PERMISSION_CAN_ADD_READING, CanViewPermissionGroup
+    PERMISSION_CAN_DESTROY_READING, PERMISSION_CAN_ADD_READING, CanViewPermissionGroup, CanChangeCoach
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_user_ngo, error_403_json, \
     request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
@@ -703,7 +703,6 @@ class UserGroupViewSet(ViewSet):
         # return Response(status=200)
 
 
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -960,8 +959,7 @@ class UserReadingViewSet(ViewSet):
 class UserRequestViewSet(ViewSet):
 
     def list(self, request):
-        # TODO
-        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+        if not has_permission(request, PERMISSION_CAN_ADD_COACH):
             return Response(status=403, data=error_403_json())
 
         user_request_filters, search_filters = user_request_filters_from_request(request.GET)
@@ -979,13 +977,8 @@ class UserRequestViewSet(ViewSet):
         serializer = UserRequestReadOnlySerializer(result, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    def create(self, request):
-        # TODO
-        # if not has_permission(request, PERMISSION_CAN_ADD_READING):
-        #     return Response(status=403, data=error_403_json())
-        if not request.user:
-            return Response(status=403, data=error_403_json())
-
+    @action(detail=False, methods=[METHOD_POST], permission_classes=[AllowAny])
+    def create_request(self, request):
         create_data = request.data.copy()
 
         try:
@@ -994,10 +987,10 @@ class UserRequestViewSet(ViewSet):
             user_request_data['middle_name'] = create_data.get('middle_name', None)
             user_request_data['last_name'] = create_data.get('last_name', None)
             user_request_data['gender'] = create_data.get('gender', None)
-            user_request_data['status'] = "pending"
+            user_request_data['ngo'] = create_data.get('ngo', None)
+            user_request_data['status'] = UserRequest.PENDING
             user_request_data['role'] = "coach"
 
-            user_request_data['ngo'] = request.user.ngo.key
             user_request_data['data'] = create_data.get('data', {})
             user_request_serializer = UserRequestWriteOnlySerializer(data=user_request_data)
             if not user_request_serializer.is_valid():
@@ -1010,8 +1003,7 @@ class UserRequestViewSet(ViewSet):
             return Response(e.errors, status=400)
 
     def retrieve(self, request, pk=None):
-        # TODO
-        if not has_permission(request, PERMISSION_CAN_VIEW_READING):
+        if not has_permission(request, PERMISSION_CAN_ADD_COACH):
             return Response(status=403, data=error_403_json())
 
         queryset = UserRequest.objects.all()
@@ -1032,8 +1024,7 @@ class UserRequestViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
-        # TODO
-        if not has_permission(request, PERMISSION_CAN_DESTROY_READING):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_COACH):
             return Response(status=403, data=error_403_json())
 
         try:
@@ -1047,12 +1038,11 @@ class UserRequestViewSet(ViewSet):
         user_request.delete()
         return Response(status=204)
 
-    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanChangeCoach])
     def request_accept(self, request, pk=None):
 
         try:
-            user_request = UserRequest.objects.filter(key=pk, status="pending").first()
-
+            user_request = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
         except UserRequest.DoesNotExist:
             return Response(status=404)
 
@@ -1064,8 +1054,6 @@ class UserRequestViewSet(ViewSet):
         coach_data['gender'] = user_request.gender
         coach_data['username'] = request.data.get('username')
         coach_data['ngo'] = request.user.ngo.key
-
-        coach_reading_data = {}
         coach_reading_data = user_request.data
 
         password = request.data.get('password')
@@ -1074,7 +1062,7 @@ class UserRequestViewSet(ViewSet):
         try:
             with transaction.atomic():
                 if confirm_password != password:
-                    output=_("password do not match")
+                    output = _("password do not match")
                     raise ValidationException(output)
                 validate_password(password)
                 validate_password(confirm_password)
@@ -1103,7 +1091,7 @@ class UserRequestViewSet(ViewSet):
                     raise ValidationException(user_reading_serializer.errors)
                 user_reading_serializer.save()
 
-            user_request.status = "Accepted"
+            user_request.status = UserRequest.APPROVED
             user_request.save()
 
         except IntegrityError as e:
@@ -1117,15 +1105,15 @@ class UserRequestViewSet(ViewSet):
         message = "Accepted"
         return Response(status=200, data=request_status(message))
 
-    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanChangeCoach])
     def request_reject(self, request, pk=None):
         try:
-            user_request = UserRequest.objects.filter(key=pk, status="pending").first()
+            user_request = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
 
         except UserRequest.DoesNotExist:
             return Response(status=404)
 
-        user_request.status = "Rejected"
+        user_request.status = UserRequest.REJECTED
         user_request.save()
 
         message = "Rejected"
