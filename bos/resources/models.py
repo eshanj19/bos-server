@@ -18,7 +18,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.crypto import get_random_string
 from bos.constants import PUBLIC_KEY_LENGTH_RESOURCE, LENGTH_LABEL, LENGTH_DESCRIPTION, \
-    PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE
+    PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, LENGTH_UUID
 from bos.permissions import PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE, PERMISSION_CAN_DESTROY_FILE, \
     PERMISSION_CAN_VIEW_FILE, PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_CHANGE_CURRICULUM, \
     PERMISSION_CAN_DESTROY_CURRICULUM, PERMISSION_CAN_VIEW_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, \
@@ -85,19 +85,34 @@ class Resource(models.Model):
         return self.label
 
 
-# class EvaluationResource(models.Model):
-#     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, default=generate_resource_evaluation_key,
-#                            unique=True)
-#     data = JSONField()
-#     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
-#     description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=True)
-#     type = models.CharField(choices=Resource.RESOURCE_TEMPLATE_TYPES, max_length=50, null=False, blank=False)
-#     user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT)
-#     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
-#     last_modification_time = models.DateTimeField(auto_now=True)
-#
-#     class Meta:
-#         db_table = 'evaluation_resources'
-#
-#     def __str__(self):
-#         return self.label
+class EvaluationResource(models.Model):
+    USER = 'user'
+    GROUP = 'group'
+    EVALUATION_RESOURCE_TYPES = (
+        (USER, 'User'),
+        (GROUP, 'Group'),
+    )
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, default=generate_resource_evaluation_key,
+                           unique=True)
+    uuid = models.CharField(max_length=LENGTH_UUID, null=False, blank=False)
+    data = JSONField()
+    label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
+    description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=True)
+    type = models.CharField(choices=EVALUATION_RESOURCE_TYPES, max_length=50, null=False, blank=False)
+    resource_type = models.CharField(choices=Resource.RESOURCE_TEMPLATE_TYPES, max_length=50, null=False, blank=False)
+    user = models.ForeignKey('users.User', null=False, blank=False, on_delete=models.PROTECT,
+                             related_name="evaluated_by_user")
+    evaluated_user = models.ForeignKey('users.User', null=True, blank=False, on_delete=models.PROTECT,
+                                       related_name="evaluated_user")
+    evaluated_group = models.ForeignKey('users.UserGroup', null=True, blank=False, on_delete=models.PROTECT,
+                                        related_name="evaluated_user_group")
+    ngo = models.ForeignKey('ngos.NGO', null=False, blank=False, on_delete=models.PROTECT)
+    is_evaluated = models.BooleanField(default=False, blank=False)
+    creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    last_modification_time = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'evaluation_resources'
+
+    def __str__(self):
+        return self.label

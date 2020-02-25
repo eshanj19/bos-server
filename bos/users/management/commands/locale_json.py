@@ -53,7 +53,7 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        locales = ["hi_IN", "en_IN"]
+        locales = ["hi_IN", "en_IN", "ka_IN"]
         domain = "django"
         localeDir = "locale"
         po_to_json(locales, domain, localeDir)

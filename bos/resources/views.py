@@ -20,7 +20,6 @@ import pathlib
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 # Create your views here.
-from django.utils.crypto import get_random_string
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -31,12 +30,15 @@ from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMISSION_CAN_ADD_FILE, \
     PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_CAN_CHANGE_FILE, \
     PERMISSION_CAN_CHANGE_CURRICULUM, PERMISSION_CAN_CHANGE_TRAINING_SESSION, PERMISSION_CAN_DESTROY_RESOURCE, \
-    PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM
+    PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM, PERMISSION_CAN_ADD_READING
 from bos.storage_backends import S3Storage
 from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource, \
     is_extension_valid
-from resources.models import Resource
-from resources.serializers import ResourceSerializer
+from resources.models import Resource, EvaluationResource
+from resources.serializers import ResourceSerializer, EvaluationResourceDetailSerializer, \
+    EvaluationResourceUserWriteOnlySerializer, \
+    EvaluationResourceGroupWriteOnlySerializer
+from users.models import User, UserGroup
 
 
 class ResourceViewSet(ViewSet):
@@ -236,3 +238,73 @@ class ResourceViewSet(ViewSet):
         resource.is_active = True
         resource.save()
         return Response(status=204)
+
+
+class EvaluationResourceViewSet(ViewSet):
+
+    def create(self, request):
+        if not has_permission(request, PERMISSION_CAN_ADD_READING):
+            return Response(status=400, data=error_400_json())
+
+        create_data = request.data.copy()
+        evaluation_resource_type = create_data.get('type')
+        evaluated_user_key = create_data.get('evaluated_user', None)
+        evaluated_group_key = create_data.get('evaluated_group', None)
+        resource_data = create_data.get('data', [])
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
+
+        create_data["ngo"] = request.user.ngo.key
+        create_data["user"] = request.user.key
+        if evaluation_resource_type == EvaluationResource.USER:
+            try:
+                evaluated_user = User.objects.get(key=evaluated_user_key, ngo=request.user.ngo)
+            except User.DoesNotExist:
+                return Response(status=400)
+
+            create_data["evaluated_user"] = evaluated_user.key
+            serializer = EvaluationResourceUserWriteOnlySerializer(data=create_data)
+        elif evaluation_resource_type == EvaluationResource.GROUP:
+            try:
+                evaluated_group = UserGroup.objects.get(key=evaluated_group_key, ngo=request.user.ngo)
+            except User.DoesNotExist:
+                return Response(status=400)
+
+            create_data["evaluated_group"] = evaluated_group.key
+            serializer = EvaluationResourceGroupWriteOnlySerializer(data=create_data)
+        else:
+            return Response(status=400, data=error_400_json())
+
+        resource_data = json.loads(resource_data)
+        create_data["data"] = resource_data
+        try:
+            if not serializer.is_valid():
+                raise ValidationException(serializer.errors)
+            evaluation_resource = serializer.save()
+            return Response(EvaluationResourceDetailSerializer(evaluation_resource).data, status=201)
+
+        except ValidationException as e:
+            return Response(status=400, data=e.errors)
+
+    def update(self, request, pk=None):
+        try:
+            evaluation_resource = EvaluationResource.objects.get(key=pk)
+        except EvaluationResource.DoesNotExist:
+            return Response(status=404)
+
+        if not has_permission(request, PERMISSION_CAN_ADD_READING):
+            return Response(status=400, data=error_400_json())
+
+        resource_data = request.data.get('data', [])
+        is_evaluated = request.data.get('is_evaluated', None)
+
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
+
+        resource_data = json.loads(resource_data)
+        evaluation_resource.data = resource_data
+        evaluation_resource.is_evaluated = is_evaluated
+        evaluation_resource.save()
+
+        serializer = EvaluationResourceDetailSerializer(evaluation_resource)
+        return Response(serializer.data)
