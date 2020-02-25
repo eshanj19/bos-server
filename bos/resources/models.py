@@ -18,7 +18,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.crypto import get_random_string
 from bos.constants import PUBLIC_KEY_LENGTH_RESOURCE, LENGTH_LABEL, LENGTH_DESCRIPTION, \
-    PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, LENGTH_UUID
+    PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE
 from bos.permissions import PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE, PERMISSION_CAN_DESTROY_FILE, \
     PERMISSION_CAN_VIEW_FILE, PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_CHANGE_CURRICULUM, \
     PERMISSION_CAN_DESTROY_CURRICULUM, PERMISSION_CAN_VIEW_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, \
@@ -94,7 +94,7 @@ class EvaluationResource(models.Model):
     )
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE, default=generate_resource_evaluation_key,
                            unique=True)
-    uuid = models.CharField(max_length=LENGTH_UUID, null=False, blank=False)
+    uuid = models.UUIDField(null=False, blank=False)
     data = JSONField()
     label = models.CharField(max_length=LENGTH_LABEL, null=False, blank=False)
     description = models.CharField(max_length=LENGTH_DESCRIPTION, null=True, blank=True)

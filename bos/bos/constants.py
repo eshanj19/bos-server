@@ -29,7 +29,6 @@ PUBLIC_KEY_LENGTH_EVALUATION_RESOURCE = 15
 
 LENGTH_TOKEN = 20
 LENGTH_LABEL = 500
-LENGTH_UUID = 40
 LENGTH_DESCRIPTION = 2000
 LENGTH_NOTE_FIELD = 500
 LENGTH_RESET_PASSWORD_TOKEN = 10
@@ -57,4 +56,4 @@ class GroupType(Enum):
 
 
 DEFAULT_ROLES = [GroupType.ADMIN.value, GroupType.COACH.value, GroupType.ATHLETE.value]
-VALID_FILE_EXTENSIONS = ['.png', '.jpeg', '.jpg', 'txt', 'mp4', 'mp3', '.pdf']
+VALID_FILE_EXTENSIONS = ['.png', '.jpeg', '.jpg', '.txt', '.mp4', '.mp3', '.pdf']

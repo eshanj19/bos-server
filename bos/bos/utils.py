@@ -226,7 +226,7 @@ def user_request_filters_from_request(request_data):
             value = request_data.get(available_user_request_search_filter)
             if available_user_request_search_filter == 'first_name':
                 search_filter = search_filter & (
-                            Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                        Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
 
     return user_request_filter, search_filter
 
@@ -245,6 +245,10 @@ def error_400_json():
 
 def error_403_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_403')}
+
+
+def error_file_extension_json():
+    return {MESSAGE_KEY: _('Unsupported file extension')}
 
 
 def request_status(message):

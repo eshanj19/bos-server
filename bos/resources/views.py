@@ -25,7 +25,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from bos.constants import METHOD_POST
-from bos.exceptions import ValidationException
+from bos.exceptions import ValidationException, SingleMessageValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMISSION_CAN_ADD_FILE, \
     PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_CAN_CHANGE_FILE, \
@@ -33,7 +33,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMIS
     PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM, PERMISSION_CAN_ADD_READING
 from bos.storage_backends import S3Storage
 from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource, \
-    is_extension_valid
+    is_extension_valid, error_file_extension_json, error_500_json
 from resources.models import Resource, EvaluationResource
 from resources.serializers import ResourceSerializer, EvaluationResourceDetailSerializer, \
     EvaluationResourceUserWriteOnlySerializer, \
@@ -74,7 +74,6 @@ class ResourceViewSet(ViewSet):
         if not resource_type:
             return Response(status=400, data=error_400_json())
         if resource_type == Resource.FILE and not has_permission(request, PERMISSION_CAN_ADD_FILE):
-            print("No permission")
             return Response(status=403, data=error_403_json())
         if resource_type == Resource.CURRICULUM and not has_permission(request, PERMISSION_CAN_ADD_CURRICULUM):
             return Response(status=403, data=error_403_json())
@@ -101,7 +100,7 @@ class ResourceViewSet(ViewSet):
                     file_directory_within_bucket = 'ngo_files/{ngo_key}/'.format(ngo_key=request.user.ngo.key)
                     file_extension = pathlib.Path(file.name).suffix
                     if not is_extension_valid(file_extension):
-                        return Response(status=400)
+                        raise SingleMessageValidationException(error_file_extension_json())
                     file_label = resource.key
                     file_name = file_label + file_extension
                     # synthesize a full file path; note that we included the filename
@@ -116,7 +115,7 @@ class ResourceViewSet(ViewSet):
                         s3_storage.save(file_path_within_bucket, file)
                         s3_file_url = s3_storage.url(file_path_within_bucket)
                     else:
-                        return Response(status=500)
+                        raise SingleMessageValidationException(error_500_json())
 
                     resource.data = {'url': s3_file_url}
                     resource.save()
@@ -124,6 +123,8 @@ class ResourceViewSet(ViewSet):
                 return Response(ResourceSerializer(resource).data, status=201)
 
         except ValidationException as e:
+            return Response(status=400, data=e.errors)
+        except SingleMessageValidationException as e:
             return Response(status=400, data=e.errors)
 
     def retrieve(self, request, pk=None):
