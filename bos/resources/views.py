@@ -14,8 +14,9 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import json
+import os
+import pathlib
 
-from django.core.files.storage import default_storage
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 # Create your views here.
@@ -29,10 +30,15 @@ from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMISSION_CAN_ADD_FILE, \
     PERMISSION_CAN_ADD_CURRICULUM, PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_CAN_CHANGE_FILE, \
     PERMISSION_CAN_CHANGE_CURRICULUM, PERMISSION_CAN_CHANGE_TRAINING_SESSION, PERMISSION_CAN_DESTROY_RESOURCE, \
-    PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM
-from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource
-from resources.models import Resource
-from resources.serializers import ResourceSerializer
+    PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM, PERMISSION_CAN_ADD_READING
+from bos.storage_backends import S3Storage
+from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource, \
+    is_extension_valid
+from resources.models import Resource, EvaluationResource
+from resources.serializers import ResourceSerializer, EvaluationResourceDetailSerializer, \
+    EvaluationResourceUserWriteOnlySerializer, \
+    EvaluationResourceGroupWriteOnlySerializer
+from users.models import User, UserGroup
 
 
 class ResourceViewSet(ViewSet):
@@ -60,9 +66,9 @@ class ResourceViewSet(ViewSet):
 
         create_data = request.data.copy()
         create_data['ngo'] = request.user.ngo.key
-
         resource_type = request.data.get('type', None)
         resource_data = request.data.get('data', None)
+
         if type(resource_data) == list:
             return Response(status=400, data=error_400_json())
         if not resource_type:
@@ -79,23 +85,43 @@ class ResourceViewSet(ViewSet):
                                                                               PERMISSION_CAN_ADD_REGISTRATION_FORM):
             return Response(status=403, data=error_403_json())
 
-        if resource_type == Resource.FILE:
-            #  TODO Saving POST'ed file to storage
-            file = request.FILES['file']
-            file_name = default_storage.save(file.name, file)
-
-            #  Reading file from storage
-            file = default_storage.open(file_name)
-            file_url = default_storage.url(file_name)
-            create_data['data'] = json.dumps({'url': file_url})
         try:
             with transaction.atomic():
+                if resource_type == Resource.FILE:
+                    create_data['data'] = {}
                 serializer = ResourceSerializer(data=create_data)
+
                 if not serializer.is_valid():
                     raise ValidationException(serializer.errors)
 
-                serializer.save()
-                return Response(serializer.data, status=201)
+                resource = serializer.save()
+
+                if resource_type == Resource.FILE:
+                    file = request.FILES['file']
+                    file_directory_within_bucket = 'ngo_files/{ngo_key}/'.format(ngo_key=request.user.ngo.key)
+                    file_extension = pathlib.Path(file.name).suffix
+                    if not is_extension_valid(file_extension):
+                        return Response(status=400)
+                    file_label = resource.key
+                    file_name = file_label + file_extension
+                    # synthesize a full file path; note that we included the filename
+                    file_path_within_bucket = os.path.join(
+                        file_directory_within_bucket,
+                        file_name
+                    )
+
+                    s3_storage = S3Storage()
+
+                    if not s3_storage.exists(file_path_within_bucket):  # avoid overwriting existing file
+                        s3_storage.save(file_path_within_bucket, file)
+                        s3_file_url = s3_storage.url(file_path_within_bucket)
+                    else:
+                        return Response(status=500)
+
+                    resource.data = {'url': s3_file_url}
+                    resource.save()
+
+                return Response(ResourceSerializer(resource).data, status=201)
 
         except ValidationException as e:
             return Response(status=400, data=e.errors)
@@ -212,3 +238,73 @@ class ResourceViewSet(ViewSet):
         resource.is_active = True
         resource.save()
         return Response(status=204)
+
+
+class EvaluationResourceViewSet(ViewSet):
+
+    def create(self, request):
+        if not has_permission(request, PERMISSION_CAN_ADD_READING):
+            return Response(status=400, data=error_400_json())
+
+        create_data = request.data.copy()
+        evaluation_resource_type = create_data.get('type')
+        evaluated_user_key = create_data.get('evaluated_user', None)
+        evaluated_group_key = create_data.get('evaluated_group', None)
+        resource_data = create_data.get('data', [])
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
+
+        create_data["ngo"] = request.user.ngo.key
+        create_data["user"] = request.user.key
+        if evaluation_resource_type == EvaluationResource.USER:
+            try:
+                evaluated_user = User.objects.get(key=evaluated_user_key, ngo=request.user.ngo)
+            except User.DoesNotExist:
+                return Response(status=400)
+
+            create_data["evaluated_user"] = evaluated_user.key
+            serializer = EvaluationResourceUserWriteOnlySerializer(data=create_data)
+        elif evaluation_resource_type == EvaluationResource.GROUP:
+            try:
+                evaluated_group = UserGroup.objects.get(key=evaluated_group_key, ngo=request.user.ngo)
+            except User.DoesNotExist:
+                return Response(status=400)
+
+            create_data["evaluated_group"] = evaluated_group.key
+            serializer = EvaluationResourceGroupWriteOnlySerializer(data=create_data)
+        else:
+            return Response(status=400, data=error_400_json())
+
+        resource_data = json.loads(resource_data)
+        create_data["data"] = resource_data
+        try:
+            if not serializer.is_valid():
+                raise ValidationException(serializer.errors)
+            evaluation_resource = serializer.save()
+            return Response(EvaluationResourceDetailSerializer(evaluation_resource).data, status=201)
+
+        except ValidationException as e:
+            return Response(status=400, data=e.errors)
+
+    def update(self, request, pk=None):
+        try:
+            evaluation_resource = EvaluationResource.objects.get(key=pk)
+        except EvaluationResource.DoesNotExist:
+            return Response(status=404)
+
+        if not has_permission(request, PERMISSION_CAN_ADD_READING):
+            return Response(status=400, data=error_400_json())
+
+        resource_data = request.data.get('data', [])
+        is_evaluated = request.data.get('is_evaluated', None)
+
+        if type(resource_data) == list:
+            return Response(status=400, data=error_400_json())
+
+        resource_data = json.loads(resource_data)
+        evaluation_resource.data = resource_data
+        evaluation_resource.is_evaluated = is_evaluated
+        evaluation_resource.save()
+
+        serializer = EvaluationResourceDetailSerializer(evaluation_resource)
+        return Response(serializer.data)

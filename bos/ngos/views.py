@@ -105,6 +105,7 @@ class NGOViewSet(ViewSet):
                     raise ValidationException(serializer.errors)
 
                 if not password or not confirm_password or (password != confirm_password):
+
                     raise ValidationException(
                         {"password": "Passwords dont match"})
                 validate_password(password=password)

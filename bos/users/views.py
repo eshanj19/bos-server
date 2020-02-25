@@ -23,8 +23,9 @@ from django.core.exceptions import ValidationError
 from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, action, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.utils.translation import gettext as _
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -41,22 +42,23 @@ from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_
     PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP, PERMISSION_CAN_ADD_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_CHANGE_CUSTOM_USER_GROUP, PERMISSION_CAN_DESTROY_CUSTOM_USER_GROUP, \
     PERMISSION_CAN_VIEW_PERMISSION_GROUP, PERMISSION_CAN_DESTROY_PERMISSION_GROUP, \
-    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, CanViewPermissionGroup, \
-    PERMISSION_CAN_VIEW_READING, PERMISSION_CAN_DESTROY_READING, PERMISSION_CAN_ADD_READING
+    PERMISSION_CAN_CHANGE_PERMISSION_GROUP, PERMISSION_CAN_ADD_PERMISSION_GROUP, PERMISSION_CAN_VIEW_READING, \
+    PERMISSION_CAN_DESTROY_READING, PERMISSION_CAN_ADD_READING, CanViewPermissionGroup, CanChangeCoach
 from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_filters_from_request, \
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_user_ngo, error_403_json, \
     request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
-    user_reading_filters_from_request, request_user_belongs_to_reading, error_checkone
+    user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
+    user_request_filters_from_request, request_user_belongs_to_user_request_ngo
 from measurements.models import Measurement
-from resources.models import Resource
-from resources.serializers import ResourceDetailSerializer
-from users.models import User, UserGroup, UserResource, MobileAuthToken, UserReading
+from resources.models import Resource, EvaluationResource
+from resources.serializers import ResourceDetailSerializer, EvaluationResourceDetailSerializer
+from users.models import User, UserGroup, UserResource, MobileAuthToken, UserReading, UserRequest
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
     UserGroupReadOnlySerializer, AdminSerializer, UserResourceSerializer, UserResourceDetailSerializer, \
     UserGroupDetailSerializer, UserReadingWriteOnlySerializer, UserReadingReadOnlySerializer, \
     UserHierarchyWriteSerializer, \
-    UserEditRestrictedDetailSerializer
+    UserEditRestrictedDetailSerializer, UserRequestReadOnlySerializer, UserRequestWriteOnlySerializer
 
 
 class UserViewSet(ViewSet):
@@ -185,6 +187,23 @@ class UserViewSet(ViewSet):
             error = convert_validation_error_into_response_error(e)
             return Response(error, status=400)
 
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def change_language(self, request, pk=None):
+        try:
+            user = User.objects.get(key=pk)
+            if not request_user_belongs_to_user_ngo(request, user):
+                return Response(status=403, data=error_403_json())
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        language = request.data.get('language', None)
+        if not language or language not in User.SUPPORTED_LANGUAGES:
+            return Response(status=400)
+
+        user.language = language
+        user.save()
+        return Response(status=200)
+
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def readings(self, request, pk=None):
         try:
@@ -197,6 +216,20 @@ class UserViewSet(ViewSet):
 
         queryset = UserReading.objects.filter(user=user)
         serializer = UserReadingReadOnlySerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def evaluation_resources(self, request, pk=None):
+        try:
+            user = User.objects.get(key=pk)
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_user_ngo(request, user):
+            return Response(status=403, data=error_403_json())
+
+        queryset = EvaluationResource.objects.filter(user=user, ngo=request.user.ngo, is_evaluated=False)
+        serializer = EvaluationResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
 
@@ -881,7 +914,8 @@ class UserReadingViewSet(ViewSet):
             user_reading_data = {}
             user_reading_data['user'] = create_data.get('user', None)
             user_reading_data['ngo'] = create_data.get('ngo', None)
-            user_reading_data['resource'] = create_data.get('resource', None)
+            user_reading_data['training_session_uuid'] = create_data.get('training_session_uuid', None)
+            user_reading_data['evaluation_resource_uuid'] = create_data.get('evaluation_resource_uuid', None)
             user_reading_data['measurement'] = create_data.get('measurement', None)
             user_reading_data['recorded_at'] = create_data.get('recorded_at', None)
             user_reading_data['value'] = create_data.get('value', None)
@@ -889,7 +923,6 @@ class UserReadingViewSet(ViewSet):
             user_reading_data['entered_by'] = request.user.key
 
             # TODO Check user measurement belong to the same ngo
-            # TODO entered date time
 
             user_reading_serializer = UserReadingWriteOnlySerializer(data=user_reading_data)
             if not user_reading_serializer.is_valid():
@@ -939,6 +972,191 @@ class UserReadingViewSet(ViewSet):
         return Response(status=204)
 
 
+class UserRequestViewSet(ViewSet):
+
+    def list(self, request):
+        if not has_permission(request, PERMISSION_CAN_ADD_COACH):
+            return Response(status=403, data=error_403_json())
+
+        user_request_filters, search_filters = user_request_filters_from_request(request.GET)
+        ordering = request.GET.get('ordering', None)
+        common_filters = {
+            'ngo': request.user.ngo,
+        }
+        filters = {**common_filters, **user_request_filters}
+
+        queryset = UserRequest.objects.filter(search_filters, **filters)
+        if ordering:
+            queryset = queryset.order_by(ordering)
+        paginator = BOSPageNumberPagination()
+        result = paginator.paginate_queryset(queryset, request)
+        serializer = UserRequestReadOnlySerializer(result, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    @action(detail=False, methods=[METHOD_POST], permission_classes=[AllowAny])
+    def create_request(self, request):
+        create_data = request.data.copy()
+
+        try:
+            user_request_data = {}
+            user_request_data['first_name'] = create_data.get('first_name', None)
+            user_request_data['middle_name'] = create_data.get('middle_name', None)
+            user_request_data['last_name'] = create_data.get('last_name', None)
+            user_request_data['gender'] = create_data.get('gender', None)
+            user_request_data['ngo'] = create_data.get('ngo', None)
+            user_request_data['status'] = UserRequest.PENDING
+            user_request_data['role'] = "coach"
+
+            user_request_data['data'] = create_data.get('data', {})
+            user_request_serializer = UserRequestWriteOnlySerializer(data=user_request_data)
+            if not user_request_serializer.is_valid():
+                raise ValidationException(user_request_serializer.errors)
+            user_request_serializer.save()
+
+            return Response(user_request_serializer.data, status=201)
+
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+    def retrieve(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_ADD_COACH):
+            return Response(status=403, data=error_403_json())
+
+        queryset = UserRequest.objects.all()
+        item = get_object_or_404(queryset, key=pk)
+        serializer = UserRequestReadOnlySerializer(item)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        try:
+            user_request = UserRequest.objects.get(key=pk)
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        serializer = UserRequestWriteOnlySerializer(user_request, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def destroy(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_COACH):
+            return Response(status=403, data=error_403_json())
+
+        try:
+            user_request = UserRequest.objects.get(key=pk)
+        except UserReading.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_user_request_ngo(request, user_request):
+            return Response(status=403, data=error_403_json())
+
+        user_request.delete()
+        return Response(status=204)
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def check_username(self, request, pk=None):
+
+        try:
+            _ = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
+
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+        username = request.data.get("username")
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return Response(data={"username": username})
+        else:
+            for i in range(1, 100):
+                temp_username = username + str(i)
+                user = User.objects.filter(username=temp_username).first()
+                if user:
+                    continue
+                break
+            return Response(data={"username": temp_username})
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def request_accept(self, request, pk=None):
+
+        try:
+            user_request = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+
+        coach_data = {}
+        coach_data['first_name'] = user_request.first_name
+        coach_data['middle_name'] = user_request.middle_name
+        coach_data['last_name'] = user_request.last_name
+        coach_data['status'] = user_request.status
+        coach_data['gender'] = user_request.gender
+        coach_data['username'] = request.data.get('username')
+        coach_data['ngo'] = request.user.ngo.key
+        coach_reading_data = user_request.data
+
+        password = request.data.get('password')
+        confirm_password = request.data.get('confirmpassword')
+
+        try:
+            with transaction.atomic():
+                if confirm_password != password:
+                    output = _("password do not match")
+                    raise ValidationException(output)
+                validate_password(password)
+                validate_password(confirm_password)
+
+                serializer = CoachSerializer(data=coach_data)
+                if not serializer.is_valid():
+                    raise ValidationException(serializer.errors)
+
+                coach = serializer.save()
+                coach.set_password(password)
+                coach.save()
+
+            coach_reading_measurements = coach_reading_data.get('measurements', [])
+
+            for coach_reading_measurement in coach_reading_measurements:
+                user_coach_data = {}
+                user_coach_data['user'] = coach.key
+                user_coach_data['ngo'] = request.user.ngo.key
+                user_coach_data['by_user'] = request.user.key
+                user_coach_data['entered_by'] = request.user.key
+                user_coach_data['measurement'] = coach_reading_measurement['key']
+                user_coach_data['value'] = coach_reading_measurement['value']
+
+                user_reading_serializer = UserReadingSerializer(data=user_coach_data)
+                if not user_reading_serializer.is_valid():
+                    raise ValidationException(user_reading_serializer.errors)
+                user_reading_serializer.save()
+
+            user_request.status = UserRequest.APPROVED
+            user_request.save()
+
+        except IntegrityError as e:
+            message = "username is already taken"
+            return Response(status=400, data=error_checkone(message))
+        except ValidationException as e:
+            return Response(status=400, data=error_checkone(e.errors))
+        except ValidationError as e:
+            return Response(status=400, data=e.errors)
+
+        message = "Accepted"
+        return Response(status=200, data=request_status(message))
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[CanChangeCoach])
+    def request_reject(self, request, pk=None):
+        try:
+            user_request = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
+
+        except UserRequest.DoesNotExist:
+            return Response(status=404)
+
+        user_request.status = UserRequest.REJECTED
+        user_request.save()
+
+        message = "Rejected"
+        return Response(status=200, data=request_status(message))
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def is_authenticated(request):
@@ -968,6 +1186,7 @@ def login_mobile_view(request):
                 'ngo_name': user.ngo.name if user.ngo else None,
                 'permissions': user.get_all_permissions(),
                 'role': user.role,
+                'gender': user.gender,
                 'language': user.language,
                 'token': auth_token.token,
                 'first_name': user.first_name,

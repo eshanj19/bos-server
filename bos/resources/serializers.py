@@ -17,7 +17,8 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 
 from ngos.models import NGO
-from resources.models import Resource
+from resources.models import Resource, EvaluationResource
+from users.models import User, UserGroup
 
 
 class ResourceSerializer(ModelSerializer):
@@ -37,4 +38,40 @@ class ResourceDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Resource
+        exclude = ('id',)
+
+
+class EvaluationResourceDetailSerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', read_only=True)
+    evaluated_user = SlugRelatedField(slug_field='key', read_only=True)
+    evaluated_group = SlugRelatedField(slug_field='key', read_only=True)
+
+    class Meta:
+        model = EvaluationResource
+        exclude = ('id',)
+
+
+class EvaluationResourceUserWriteOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    evaluated_user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+
+    class Meta:
+        model = EvaluationResource
+        exclude = ('id',)
+
+
+class EvaluationResourceGroupWriteOnlySerializer(ModelSerializer):
+    lookup_field = 'key'
+    pk_field = 'key'
+    ngo = SlugRelatedField(slug_field='key', queryset=NGO.objects.all())
+    user = SlugRelatedField(slug_field='key', queryset=User.objects.all())
+    evaluated_group = SlugRelatedField(slug_field='key', queryset=UserGroup.objects.all())
+
+    class Meta:
+        model = EvaluationResource
         exclude = ('id',)
