@@ -322,7 +322,13 @@ _("Edit Reading"),
 
 _("ra.title.theme"),
 
-_("ra.title.language")
+_("ra.title.language"),
+
+_("dashboard"),
+
+_("bosadmin"),
+
+_("ra.menu.usergroup")
 
 
 

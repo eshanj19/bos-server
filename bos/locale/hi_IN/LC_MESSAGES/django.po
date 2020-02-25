@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-19 15:20+0530\n"
+"POT-Creation-Date: 2020-02-24 13:59+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,19 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: bos/utils.py:241
+#: bos/utils.py:243
 msgid "ERROR_MESSAGE_400"
 msgstr ""
 
-#: bos/utils.py:245
+#: bos/utils.py:247
 msgid "ERROR_MESSAGE_403"
 msgstr ""
 
-#: bos/utils.py:253
+#: bos/utils.py:255
 msgid "ERROR_MESSAGE_404"
 msgstr ""
 
-#: bos/utils.py:257
+#: bos/utils.py:259
 msgid "ERROR_MESSAGE_500"
 msgstr ""
 
@@ -649,14 +649,22 @@ msgstr ""
 msgid "ra.title.language"
 msgstr ""
 
+#: conv.py:327
+msgid "dashboard"
+msgstr ""
+
+#: conv.py:329
+msgid "bosadmin"
+msgstr ""
+
+#: conv.py:331
+msgid "ra.menu.usergroup"
+msgstr ""
+
 #: users/models.py:102
 msgid "user with this email already exists"
 msgstr ""
 
-#: users/views.py:695
-msgid "Welcome to my site"
-msgstr ""
-
-#: users/views.py:1077
+#: users/views.py:1071
 msgid "password do not match"
 msgstr ""
