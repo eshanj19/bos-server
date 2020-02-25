@@ -22,7 +22,7 @@ from django.utils.translation import gettext as _
 
 from bos.constants import PUBLIC_KEY_LENGTH_USER, LENGTH_TOKEN, LENGTH_RESET_PASSWORD_TOKEN, FIELD_LENGTH_NAME, \
     LENGTH_USERNAME, PUBLIC_KEY_LENGTH_USER_READING, PUBLIC_KEY_LENGTH_USER_GROUP, LENGTH_LABEL, \
-    PUBLIC_KEY_LENGTH_USER_REQUEST
+    PUBLIC_KEY_LENGTH_USER_REQUEST, LENGTH_UUID
 from bos.permissions import PERMISSION_BOS_ADMIN, PERMISSION_CAN_ADD_COACH, PERMISSION_CAN_CHANGE_COACH, \
     PERMISSION_CAN_DESTROY_COACH, PERMISSION_CAN_VIEW_COACH, PERMISSION_CAN_ADD_ATHLETE, PERMISSION_CAN_CHANGE_ATHLETE, \
     PERMISSION_CAN_DESTROY_ATHLETE, PERMISSION_CAN_VIEW_ATHLETE, PERMISSION_CAN_ADD_ADMIN, PERMISSION_CAN_CHANGE_ADMIN, \
@@ -83,6 +83,7 @@ class User(AbstractUser):
         (MALE, 'Male'),
         (FEMALE, 'Female'),
     )
+    SUPPORTED_LANGUAGES = [language_code for language_code, _ in LANGUAGES]
 
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER,
                            default=generate_user_key, unique=True)
@@ -180,12 +181,10 @@ class UserReading(models.Model):
                                    related_name='entered_by')
     measurement = models.ForeignKey(
         'measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
-    resource = models.ForeignKey('resources.Resource', related_name='resource', null=True, blank=True,
-                                 on_delete=models.PROTECT)
-    resource_session = models.ForeignKey('resources.Resource', related_name='resource_session', null=True,
-                                         blank=True, on_delete=models.PROTECT)
-    resource_session_uuid = models.CharField(
-        max_length=100, null=True, blank=True)
+    training_session_uuid = models.CharField(
+        max_length=LENGTH_UUID, null=True, blank=True)
+    evaluation_resource_uuid = models.CharField(
+        max_length=LENGTH_UUID, null=True, blank=True)
     type = models.CharField(max_length=100, null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)

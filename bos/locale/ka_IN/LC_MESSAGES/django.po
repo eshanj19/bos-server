@@ -649,18 +649,6 @@ msgstr ""
 msgid "ra.title.language"
 msgstr ""
 
-#: conv.py:327
-msgid "dashboard"
-msgstr ""
-
-#: conv.py:329
-msgid "bosadmin"
-msgstr ""
-
-#: conv.py:331
-msgid "ra.menu.usergroup"
-msgstr ""
-
 #: users/models.py:102
 msgid "user with this email already exists"
 msgstr ""

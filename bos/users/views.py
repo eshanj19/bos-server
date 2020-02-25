@@ -50,8 +50,8 @@ from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_
     user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
     user_request_filters_from_request, request_user_belongs_to_user_request_ngo
 from measurements.models import Measurement
-from resources.models import Resource
-from resources.serializers import ResourceDetailSerializer
+from resources.models import Resource, EvaluationResource
+from resources.serializers import ResourceDetailSerializer, EvaluationResourceDetailSerializer
 from users.models import User, UserGroup, UserResource, MobileAuthToken, UserReading, UserRequest
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
@@ -187,6 +187,23 @@ class UserViewSet(ViewSet):
             error = convert_validation_error_into_response_error(e)
             return Response(error, status=400)
 
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def change_language(self, request, pk=None):
+        try:
+            user = User.objects.get(key=pk)
+            if not request_user_belongs_to_user_ngo(request, user):
+                return Response(status=403, data=error_403_json())
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        language = request.data.get('language', None)
+        if not language or language not in User.SUPPORTED_LANGUAGES:
+            return Response(status=400)
+
+        user.language = language
+        user.save()
+        return Response(status=200)
+
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def readings(self, request, pk=None):
         try:
@@ -199,6 +216,20 @@ class UserViewSet(ViewSet):
 
         queryset = UserReading.objects.filter(user=user)
         serializer = UserReadingReadOnlySerializer(queryset, many=True)
+        return Response(data=serializer.data)
+
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
+    def evaluation_resources(self, request, pk=None):
+        try:
+            user = User.objects.get(key=pk)
+        except User.DoesNotExist:
+            return Response(status=404)
+
+        if not request_user_belongs_to_user_ngo(request, user):
+            return Response(status=403, data=error_403_json())
+
+        queryset = EvaluationResource.objects.filter(user=user, ngo=request.user.ngo, is_evaluated=False)
+        serializer = EvaluationResourceDetailSerializer(queryset, many=True)
         return Response(data=serializer.data)
 
 
@@ -883,7 +914,8 @@ class UserReadingViewSet(ViewSet):
             user_reading_data = {}
             user_reading_data['user'] = create_data.get('user', None)
             user_reading_data['ngo'] = create_data.get('ngo', None)
-            user_reading_data['resource'] = create_data.get('resource', None)
+            user_reading_data['training_session_uuid'] = create_data.get('training_session_uuid', None)
+            user_reading_data['evaluation_resource_uuid'] = create_data.get('evaluation_resource_uuid', None)
             user_reading_data['measurement'] = create_data.get('measurement', None)
             user_reading_data['recorded_at'] = create_data.get('recorded_at', None)
             user_reading_data['value'] = create_data.get('value', None)
@@ -891,7 +923,6 @@ class UserReadingViewSet(ViewSet):
             user_reading_data['entered_by'] = request.user.key
 
             # TODO Check user measurement belong to the same ngo
-            # TODO entered date time
 
             user_reading_serializer = UserReadingWriteOnlySerializer(data=user_reading_data)
             if not user_reading_serializer.is_valid():
