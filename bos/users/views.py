@@ -34,8 +34,7 @@ from bos.constants import METHOD_POST
 from bos.defaults import DEFAULT_PERMISSIONS_BLACKLIST
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.permissions import has_permission, PERMISSION_CAN_ADD_USER, PERMISSION_CAN_VIEW_USER, \
-    PERMISSION_CAN_CHANGE_USER, PERMISSION_CAN_DESTROY_USER, PERMISSION_CAN_VIEW_ADMIN, PERMISSION_CAN_ADD_ADMIN, \
+from bos.permissions import has_permission, PERMISSION_CAN_VIEW_ADMIN, PERMISSION_CAN_ADD_ADMIN, \
     PERMISSION_CAN_DESTROY_ADMIN, PERMISSION_CAN_CHANGE_ADMIN, PERMISSION_CAN_VIEW_ATHLETE, PERMISSION_CAN_ADD_ATHLETE, \
     PERMISSION_CAN_CHANGE_ATHLETE, PERMISSION_CAN_DESTROY_ATHLETE, PERMISSION_CAN_VIEW_COACH, \
     PERMISSION_CAN_DESTROY_COACH, PERMISSION_CAN_CHANGE_COACH, PERMISSION_CAN_ADD_COACH, \
@@ -62,79 +61,6 @@ from users.serializers import UserSerializer, PermissionGroupDetailSerializer, P
 
 
 class UserViewSet(ViewSet):
-    def list(self, request):
-        if not has_permission(request, PERMISSION_CAN_VIEW_USER):
-            return Response(status=403, data=error_403_json())
-
-        user_filters, search_filters = user_filters_from_request(request.GET)
-        ordering = request.GET.get('ordering', None)
-        common_filters = {
-            'ngo': request.user.ngo,
-            'role': User.ADMIN,
-        }
-        filters = {**common_filters, **user_filters}
-
-        queryset = User.objects.filter(search_filters, **filters)
-        if ordering:
-            queryset = queryset.order_by(ordering)
-        paginator = BOSPageNumberPagination()
-        result = paginator.paginate_queryset(queryset, request)
-        serializer = UserSerializer(result, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-    def create(self, request):
-        if not has_permission(request, PERMISSION_CAN_ADD_USER):
-            return Response(status=403, data=error_403_json())
-
-        create_data = request.data.copy()
-        create_data['ngo'] = request.user.ngo.key
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-    def retrieve(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_USER):
-            return Response(status=403, data=error_403_json())
-
-        queryset = User.objects.all()
-        item = get_object_or_404(queryset, key=pk)
-        serializer = UserSerializer(item)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_CHANGE_USER):
-            return Response(status=403, data=error_403_json())
-
-        try:
-            user = User.objects.get(key=pk)
-        except User.DoesNotExist:
-            return Response(status=404)
-
-        if not request_user_belongs_to_user_ngo(request, user):
-            return Response(status=403, data=error_403_json())
-
-        serializer = UserSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
-    def destroy(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_DESTROY_USER):
-            return Response(status=403, data=error_403_json())
-
-        try:
-            user = User.objects.get(key=pk)
-        except User.DoesNotExist:
-            return Response(status=404)
-
-        if not request_user_belongs_to_user_ngo(request, user):
-            return Response(status=403, data=error_403_json())
-        user.delete()
-        return Response(status=204)
-
     @action(detail=True, methods=[METHOD_GET], permission_classes=[IsAuthenticated])
     def resources(self, request, pk=None):
         try:

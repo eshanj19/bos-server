@@ -98,15 +98,6 @@ PERMISSION_CAN_VIEW_PERMISSION = ('view_permission', 'Can view permission', 'use
 PERMISSIONS_PERMISSION = [PERMISSION_CAN_ADD_PERMISSION, PERMISSION_CAN_CHANGE_PERMISSION,
                           PERMISSION_CAN_DESTROY_PERMISSION,
                           PERMISSION_CAN_VIEW_PERMISSION]
-# USERS
-PERMISSION_CAN_ADD_USER = ('add_user', 'Can add user', 'users.add_user')
-PERMISSION_CAN_CHANGE_USER = ('change_user', 'Can change user', 'users.change_user')
-PERMISSION_CAN_DESTROY_USER = ('delete_user', 'Can delete user', 'users.delete_user')
-PERMISSION_CAN_VIEW_USER = ('view_user', 'Can view user', 'users.view_user')
-PERMISSION_CAN_IMPORT_USERS = ('can_import', 'Can import user through excel file', 'users.can_import')
-PERMISSION_CAN_EXPORT_USERS = ('can_export', 'Can export user through excel file', 'users.can_export')
-PERMISSIONS_USER = [PERMISSION_CAN_ADD_USER, PERMISSION_CAN_CHANGE_USER, PERMISSION_CAN_DESTROY_USER,
-                    PERMISSION_CAN_VIEW_USER, PERMISSION_CAN_IMPORT_USERS, PERMISSION_CAN_EXPORT_USERS, ]
 
 # ADMINS
 PERMISSION_CAN_ADD_ADMIN = ('add_admin', 'Can add admin', 'users.add_admin')
@@ -200,7 +191,6 @@ DEFAULT_PERMISSIONS_COACH = [PERMISSION_CAN_VIEW_CURRICULUM,
                              PERMISSION_CAN_VIEW_MEASUREMENT,
                              PERMISSION_CAN_VIEW_MEASUREMENT_TYPE,
                              PERMISSION_CAN_VIEW_PERMISSION,
-                             PERMISSION_CAN_VIEW_USER,
                              PERMISSION_CAN_VIEW_ADMIN,
                              PERMISSION_CAN_VIEW_COACH,
                              PERMISSION_CAN_CHANGE_COACH,
@@ -215,30 +205,6 @@ def has_permission(request, permission):
     if request.user and request.user.has_perm(permission[2]):
         return True
     return False
-
-
-class CanAddUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_ADD_USER)
-
-
-class CanChangeUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_CHANGE_USER)
-
-
-class CanDeleteUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_DESTROY_USER)
-
-
-class CanViewUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_VIEW_USER)
 
 
 class CanAddMeasurement(permissions.BasePermission):

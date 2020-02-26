@@ -32,11 +32,10 @@ from bos.defaults import DEFAULT_MEASUREMENT_TYPES
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
 from bos.permissions import CanChangeCustomUserGroup, DEFAULT_PERMISSIONS_NGO_ADMIN, \
-    has_permission, PERMISSION_BOS_ADMIN, BOSAdmin, CanViewPermissionGroup, CanViewFile, CanViewCurriculum, \
-    CanViewTrainingSession, CanAddTrainingSession, CanViewUserHierarchy, PERMISSION_CAN_CHANGE_USER, \
-    PERMISSION_CAN_CHANGE_ADMIN, PERMISSION_CAN_CHANGE_COACH, CanChangeUserHierarchy, CanViewMeasurement, \
-    DEFAULT_PERMISSIONS_COACH, CanViewResource, CanChangeUser, CanChangeCoach, CanChangeAdmin, PERMISSION_CAN_VIEW_NGO, \
-    PERMISSION_CAN_ADD_NGO, PERMISSION_CAN_CHANGE_NGO, PERMISSION_CAN_DESTROY_NGO
+    has_permission, BOSAdmin, CanViewPermissionGroup, CanViewFile, CanViewCurriculum, \
+    CanViewTrainingSession, CanAddTrainingSession, CanViewUserHierarchy, CanChangeUserHierarchy, CanViewMeasurement, \
+    DEFAULT_PERMISSIONS_COACH, CanChangeCoach, CanChangeAdmin, PERMISSION_CAN_VIEW_NGO, \
+    PERMISSION_CAN_ADD_NGO, PERMISSION_CAN_CHANGE_NGO, PERMISSION_CAN_DESTROY_NGO, CanChangeAthlete
 from bos.utils import ngo_filters_from_request
 from measurements.models import generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer, MeasurementDetailSerializer
@@ -500,7 +499,7 @@ class NGOViewSet(ViewSet):
         serializer = MeasurementDetailSerializer(queryset, read_only=True, many=True)
         return Response(data=serializer.data)
 
-    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeUser,
+    @action(detail=True, methods=[METHOD_GET], permission_classes=[CanChangeAthlete,
                                                                    CanChangeAdmin,
                                                                    CanChangeCoach])
     def all_resources(self, request, pk=None):
