@@ -26,7 +26,7 @@ from bos.constants import GroupType
 from bos.defaults import DEFAULT_MEASUREMENT_TYPES, DEFAULT_NGO, DEFAULT_NGO_ADMIN_EMAIL, DEFAULT_NGO_ADMIN_FIRST_NAME, \
     DEFAULT_NGO_ADMIN_LAST_NAME, DEFAULT_NGO_ADMIN_USERNAME, DEFAULT_STUDENT_BASELINES, \
     DefaultMeasurementType, DEFAULT_STUDENT_PROGRESSIONS, DEFAULT_COACH_BASELINES
-from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN
+from bos.permissions import DEFAULT_PERMISSIONS_BOS_NGO_ADMIN, DEFAULT_PERMISSIONS_COACH
 from measurements.models import MeasurementType, generate_measurement_key, Measurement
 from measurements.serializers import MeasurementTypeSerializer, MeasurementSerializer
 from ngos.models import NGO, generate_ngo_key
@@ -94,6 +94,7 @@ class Command(BaseCommand):
                                       "first_name": DEFAULT_NGO_ADMIN_FIRST_NAME,
                                       "last_name": DEFAULT_NGO_ADMIN_LAST_NAME, "email": DEFAULT_NGO_ADMIN_EMAIL,
                                       "ngo": bos_ngo.key,
+                                      "gender": User.MALE,
                                       "is_active": True}
 
                     serializer = UserSerializer(data=bos_admin_data)
@@ -117,6 +118,7 @@ class Command(BaseCommand):
                 try:
                     code_name = 'bos_admin'
                     name = 'bos admin'
+                    # Add bos admin permissions to bos admin
                     permission = Permission.objects.get(codename=code_name, name=name)
                     bos_admin.user_permissions.add(permission)
                     self.stdout.write(self.style.SUCCESS('Added "%s" permission to admin_group' % name))
@@ -134,14 +136,25 @@ class Command(BaseCommand):
                         logging.warning("Permission not found with codename '{}' name '{}'.".format(code_name, name))
                         continue
 
-                # Add bos admin permissions to bos admin
+                coach_group_name = utils.get_ngo_group_name(
+                    bos_ngo, GroupType.COACH.value)
+                coach_group, created = Group.objects.get_or_create(
+                    name=coach_group_name)
 
+                for code_name, name, _ in DEFAULT_PERMISSIONS_COACH:
+                    try:
+                        permission = Permission.objects.get(
+                            codename=code_name, name=name)
+                        coach_group.permissions.add(permission)
+                    except Permission.DoesNotExist:
+                        logging.warning("Permission not found with codename '{}' name '{}'.".format(code_name, name))
+                        continue
 
                 # Create default Student baselines
 
                 student_baseline_measurement_type = MeasurementType.objects.get(
                     label=DefaultMeasurementType.STUDENT_BASELINE.value)
-                for student_baseline,input_type,uom in DEFAULT_STUDENT_BASELINES:
+                for student_baseline, input_type, uom in DEFAULT_STUDENT_BASELINES:
                     try:
                         _ = Measurement.objects.get(label=student_baseline,
                                                     types=student_baseline_measurement_type)
@@ -176,7 +189,7 @@ class Command(BaseCommand):
 
                 student_progression_measurement_type = MeasurementType.objects.get(
                     label=DefaultMeasurementType.STUDENT_PROGRESSION.value)
-                for student_progression,input_type,uom in DEFAULT_STUDENT_PROGRESSIONS:
+                for student_progression, input_type, uom in DEFAULT_STUDENT_PROGRESSIONS:
                     try:
                         _ = Measurement.objects.get(label=student_progression,
                                                     types=student_progression_measurement_type)
@@ -184,7 +197,8 @@ class Command(BaseCommand):
 
                         if created:
                             self.stdout.write(
-                                self.style.SUCCESS('DefaultMeasurementType "%s" added to database' % student_progression))
+                                self.style.SUCCESS(
+                                    'DefaultMeasurementType "%s" added to database' % student_progression))
                         else:
                             create_data = {
                                 'label': student_progression,
@@ -211,7 +225,7 @@ class Command(BaseCommand):
 
                 coach_baseline_measurement_type = MeasurementType.objects.get(
                     label=DefaultMeasurementType.COACH_BASELINE.value)
-                for coach_baseline,input_type,uom in DEFAULT_COACH_BASELINES:
+                for coach_baseline, input_type, uom in DEFAULT_COACH_BASELINES:
                     try:
                         _ = Measurement.objects.get(label=coach_baseline,
                                                     types=coach_baseline_measurement_type)

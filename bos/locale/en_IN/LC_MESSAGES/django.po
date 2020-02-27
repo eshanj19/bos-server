@@ -1,0 +1,673 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-02-24 13:59+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: bos/utils.py:243
+msgid "ERROR_MESSAGE_400"
+msgstr ""
+
+#: bos/utils.py:247
+msgid "ERROR_MESSAGE_403"
+msgstr ""
+
+#: bos/utils.py:255
+msgid "ERROR_MESSAGE_404"
+msgstr ""
+
+#: bos/utils.py:259
+msgid "ERROR_MESSAGE_500"
+msgstr ""
+
+#: conv.py:19
+msgid "ra.action.save"
+msgstr "Save"
+
+#: conv.py:21
+msgid "ra.action.create"
+msgstr "Create"
+
+#: conv.py:23
+msgid "ra.action.edit"
+msgstr "Edit"
+
+#: conv.py:25
+msgid "ra.action.delete"
+msgstr "Delete"
+
+#: conv.py:27
+msgid "ra.action.add_filter"
+msgstr "Add Filter"
+
+#: conv.py:29
+msgid "ra.action.add"
+msgstr "Add"
+
+#: conv.py:31
+msgid "ra.action.back"
+msgstr "Back"
+
+#: conv.py:33
+msgid "ra.action.bulk_actions"
+msgstr "Bulk Actions"
+
+#: conv.py:35
+msgid "ra.action.bulk_cancel"
+msgstr "Bulk Cancel"
+
+#: conv.py:37
+msgid "ra.action.clear_input_value"
+msgstr "Clear input value"
+
+#: conv.py:39
+msgid "ra.action.export"
+msgstr "Export"
+
+#: conv.py:41
+msgid "ra.action.list"
+msgstr "List"
+
+#: conv.py:43
+msgid "ra.action.remove_filter"
+msgstr "Remove Filter"
+
+#: conv.py:45
+msgid "ra.action.remove"
+msgstr "Remove"
+
+#: conv.py:47
+msgid "ra.action.search"
+msgstr "Search"
+
+#: conv.py:49
+msgid "ra.action.show"
+msgstr "Show"
+
+#: conv.py:51
+msgid "ra.boolean.true"
+msgstr "True"
+
+#: conv.py:53
+msgid "ra.boolean.false"
+msgstr "False"
+
+#: conv.py:55
+msgid "ra.action.refresh"
+msgstr "Refresh"
+
+#: conv.py:57
+msgid "ra.validation.required"
+msgstr "Required"
+
+#: conv.py:59
+msgid "ra.validation.minLength"
+msgstr ""
+
+#: conv.py:61
+msgid "ra.validation.maxLength"
+msgstr ""
+
+#: conv.py:63
+msgid "ra.validation.minValue"
+msgstr ""
+
+#: conv.py:65
+msgid "ra.validation.maxValue"
+msgstr ""
+
+#: conv.py:67
+msgid "ra.validation.number"
+msgstr ""
+
+#: conv.py:69
+msgid "ra.validation.email"
+msgstr "Email"
+
+#: conv.py:71
+msgid "ra.validation.oneOf"
+msgstr ""
+
+#: conv.py:73
+msgid "ra.validation.regex"
+msgstr ""
+
+#: conv.py:75
+msgid "ra.title.first_name"
+msgstr "First name"
+
+#: conv.py:77
+msgid "ra.title.middle_name"
+msgstr "Middle name"
+
+#: conv.py:79
+msgid "ra.title.last_name"
+msgstr "Last name"
+
+#: conv.py:81
+msgid "ra.title.current_password"
+msgstr "Current Password"
+
+#: conv.py:83
+msgid "ra.title.password"
+msgstr "Password"
+
+#: conv.py:85
+msgid "ra.title.gender"
+msgstr "Gender"
+
+#: conv.py:87
+msgid "ra.title.full_name"
+msgstr "Full Name"
+
+#: conv.py:89
+msgid "ra.title.email"
+msgstr "Email"
+
+#: conv.py:91
+msgid "ra.action.active"
+msgstr "Active"
+
+#: conv.py:93
+msgid "ra.title.created_on"
+msgstr "Created on"
+
+#: conv.py:95
+msgid "ra.title.last_mod"
+msgstr "Last Modification"
+
+#: conv.py:97
+msgid "ra.title.username"
+msgstr "Username"
+
+#: conv.py:99
+msgid "ra.title.confirm_password"
+msgstr "Confirm Password"
+
+#: conv.py:101
+msgid "ra.title.permission_group"
+msgstr "Permission Group"
+
+#: conv.py:103
+msgid "ra.title.name"
+msgstr "Name"
+
+#: conv.py:105
+msgid "ra.title.users"
+msgstr "Users"
+
+#: conv.py:107
+msgid "ra.title.resources"
+msgstr "Resources"
+
+#: conv.py:109
+msgid "ra.option.curriculum"
+msgstr "Curriculum"
+
+#: conv.py:111
+msgid "ra.option.training_session"
+msgstr "Training Session"
+
+#: conv.py:113
+msgid "ra.option.file"
+msgstr "File"
+
+#: conv.py:115
+msgid "ra.option.registration_form"
+msgstr "Registration Form"
+
+#: conv.py:117
+msgid "ra.title.description"
+msgstr "Description"
+
+#: conv.py:119
+msgid "ra.title.day"
+msgstr "Day"
+
+#: conv.py:121
+msgid "ra.title.type"
+msgstr "Type"
+
+#: conv.py:123
+msgid "ra.title.label"
+msgstr "Label"
+
+#: conv.py:125
+msgid "ra.title.uom"
+msgstr "uom"
+
+#: conv.py:127
+msgid "ra.title.inputtype"
+msgstr "input type"
+
+#: conv.py:129
+msgid "ra.title.measurements"
+msgstr "Measurements"
+
+#: conv.py:131
+msgid "ra.title.athlete"
+msgstr "Athlete"
+
+#: conv.py:133
+msgid "ra.title.value"
+msgstr "Value"
+
+#: conv.py:135
+msgid "ra.action.submit"
+msgstr "Submit"
+
+#: conv.py:137
+msgid "ra.title.name_of_ngo"
+msgstr "Name of NGO"
+
+#: conv.py:139
+msgid "ra.title.first_name_ngo_admin"
+msgstr "First Name of NGO Admin"
+
+#: conv.py:141
+msgid "ra.title.last_name_ngo_admin"
+msgstr "Last Name of NGO Admin"
+
+#: conv.py:143
+msgid "ra.title.username_ngo_admin"
+msgstr "Username of NGO admin"
+
+#: conv.py:145
+msgid "ra.title.emailaddress_ngo_admin"
+msgstr "Email Address of NGO Admin"
+
+#: conv.py:147
+msgid "ra.menu.reading"
+msgstr "Reading"
+
+#: conv.py:149
+msgid "ra.menu.measurement_type"
+msgstr "Measurement Type"
+
+#: conv.py:151
+msgid "ra.menu.ngos"
+msgstr "Ngos"
+
+#: conv.py:153
+msgid "ra.title.set_parent"
+msgstr "Set Parent"
+
+#: conv.py:155
+msgid "ra.title.names_of_permission_group"
+msgstr "Name of Permission Group"
+
+#: conv.py:157
+msgid "ra.title.is_active"
+msgstr "is active"
+
+#: conv.py:159
+msgid "ra.title.view_edit_organisation"
+msgstr "View/Edit Organisation"
+
+#: conv.py:161
+msgid "ra.theme.light"
+msgstr "light"
+
+#: conv.py:163
+msgid "ra.theme.dark"
+msgstr "Dark"
+
+#: conv.py:165
+msgid "Create Measurement type"
+msgstr "Create Measurement type"
+
+#: conv.py:167
+msgid "ra.title.recorded_on"
+msgstr "recorded_on"
+
+#: conv.py:169
+msgid "ra.action.next"
+msgstr "Next"
+
+#: conv.py:171
+msgid "applicant's details"
+msgstr "Apllicant's Details"
+
+#: conv.py:173
+msgid "ra.language.en"
+msgstr "En"
+
+#: conv.py:175
+msgid "ra.language.hi"
+msgstr "Hi"
+
+#: conv.py:177
+msgid "configuration"
+msgstr "Configuration"
+
+#: conv.py:179
+msgid "logout"
+msgstr "Logout"
+
+#: conv.py:181
+msgid "login"
+msgstr "Login"
+
+#: conv.py:183
+msgid "ra.menu.admins"
+msgstr "Admins"
+
+#: conv.py:185
+msgid "ra.menu.requests"
+msgstr "Requests"
+
+#: conv.py:187
+msgid "List of user groups"
+msgstr "List of user groups"
+
+#: conv.py:189
+msgid "List of permission groups"
+msgstr "List of permission groups"
+
+#: conv.py:191
+msgid "ra.title.role"
+msgstr "role"
+
+#: conv.py:193
+msgid "ra.title.date"
+msgstr "Date"
+
+#: conv.py:195
+msgid "ra.title.status"
+msgstr "Status"
+
+#: conv.py:197
+msgid "ra.action.mandatory"
+msgstr "Mandatory"
+
+#: conv.py:199
+msgid " Create Curriculum"
+msgstr " Create Curriculum"
+
+#: conv.py:201
+msgid "Create Training Session"
+msgstr "Create Training Session"
+
+#: conv.py:203
+msgid "Create File Resource"
+msgstr "Create File Resource"
+
+#: conv.py:205
+msgid "Create Registration Form"
+msgstr "Create Registration Form"
+
+#: conv.py:207
+msgid "ra.action.add_measurement"
+msgstr "Add Measurement"
+
+#: conv.py:209
+msgid "ra.action.add_file"
+msgstr "Add File"
+
+#: conv.py:211
+msgid "ra.action.select_file"
+msgstr "Select File"
+
+#: conv.py:213
+msgid "Edit curriculum"
+msgstr "Edit Curriculum"
+
+#: conv.py:215
+msgid "Edit training session"
+msgstr "Edit Training Session"
+
+#: conv.py:217
+msgid "Edit file resources"
+msgstr "Edit FileResources"
+
+#: conv.py:219
+msgid "Edit registration form"
+msgstr "Edit Registration Form"
+
+#: conv.py:221
+msgid "Select a file to upload"
+msgstr ""
+"Select a file to upload_Maximum file size:5 MB.All file types are supported"
+
+#: conv.py:223
+#, fuzzy
+#| msgid "Set As Athlete Registration"
+msgid " Set As Athlete Registration"
+msgstr "Set As Athlete Registration"
+
+#: conv.py:225
+msgid "Set As Coach Registration"
+msgstr "Set As Coach Registration"
+
+#: conv.py:227
+msgid "ra.action.activate"
+msgstr "Activate"
+
+#: conv.py:229
+msgid "a.action.deactivate"
+msgstr "Deactivate"
+
+#: conv.py:231
+msgid "Members with no athlete/coach relationship"
+msgstr "Members with no athlete/coach relationship"
+
+#: conv.py:233
+msgid "ra.action.reset_password"
+msgstr "Reset Password"
+
+#: conv.py:235
+msgid "ra.action.cancel"
+msgstr "Cancel"
+
+#: conv.py:237
+msgid "ra.action.reset"
+msgstr "Reset"
+
+#: conv.py:239
+msgid "ra.title.no_members"
+msgstr "No members"
+
+#: conv.py:241
+msgid "ra.title.empty"
+msgstr "empty"
+
+#: conv.py:243
+msgid "ra.menu.coaches"
+msgstr "Coaches"
+
+#: conv.py:245
+msgid "ra.menu.organisation"
+msgstr "Organisation"
+
+#: conv.py:247
+msgid "Welcome to Bridges of Sports platform"
+msgstr "Welcome to Bridges of Sports platform"
+
+#: conv.py:249
+msgid "edit ngo"
+msgstr "Edit Ngo"
+
+#: conv.py:251
+msgid "create ngo"
+msgstr "Create Ngo"
+
+#: conv.py:253
+msgid "create admin"
+msgstr "Create Admin"
+
+#: conv.py:255
+msgid "edit admin"
+msgstr "Edit Admin"
+
+#: conv.py:257
+msgid "edit coach"
+msgstr "Edit Coach"
+
+#: conv.py:259
+msgid "create coach"
+msgstr "Create Coach"
+
+#: conv.py:261
+msgid "edit athelete"
+msgstr "Edit Athelet"
+
+#: conv.py:263
+msgid "create athlete"
+msgstr "Create Athelet"
+
+#: conv.py:265
+msgid "create user group"
+msgstr "Create User group"
+
+#: conv.py:267
+msgid "edit user group"
+msgstr "Edit User group"
+
+#: conv.py:269
+msgid "create request"
+msgstr "Create Request"
+
+#: conv.py:271
+msgid "edit request"
+msgstr "Edit Requests"
+
+#: conv.py:273
+msgid "edit measurements"
+msgstr "Edit Measurement"
+
+#: conv.py:275
+msgid "create measuremet"
+msgstr "Create Measurement"
+
+#: conv.py:277
+msgid "ra.action.accept"
+msgstr "Accept"
+
+#: conv.py:279
+msgid "ra.action.decline"
+msgstr "Decline"
+
+#: conv.py:281
+msgid "ra.action.set"
+msgstr "Set"
+
+#: conv.py:283
+msgid "Choose username and password"
+msgstr "Choose username and password"
+
+#: conv.py:285
+msgid "ra.title.enter_password"
+msgstr "Enter password"
+
+#: conv.py:287
+msgid "ra.title.curriculum_name"
+msgstr "Curriculum Name"
+
+#: conv.py:289
+msgid "ra.title.curriculum_description"
+msgstr " Curriculum Description"
+
+#: conv.py:291
+msgid "ra.title.enter_day_title"
+msgstr "Enter day title"
+
+#: conv.py:293
+msgid "ra.action.add_session"
+msgstr "Add Session"
+
+#: conv.py:295
+msgid "ra.action.add_day"
+msgstr "Add day"
+
+#: conv.py:297
+msgid "ra.title.enter_item_title"
+msgstr "Enter item title"
+
+#: conv.py:299
+msgid "ra.title.file_name"
+msgstr "File Name"
+
+#: conv.py:301
+msgid "ra.title.file_description"
+msgstr "File Description"
+
+#: conv.py:303
+msgid "file resource"
+msgstr "File resource"
+
+#: conv.py:305
+msgid "Permissions for group"
+msgstr "Permissions for group"
+
+#: conv.py:307
+msgid "admin_information"
+msgstr "Admin Information"
+
+#: conv.py:309
+msgid "coach_information"
+msgstr "Coach Information"
+
+#: conv.py:311
+msgid "athlete_information"
+msgstr "Athlete Information"
+
+#: conv.py:313
+msgid "create measurement type"
+msgstr "Create Measurement Type"
+
+#: conv.py:315
+msgid "edit measurement type"
+msgstr "Edit Measurement Type"
+
+#: conv.py:317
+msgid "Enter Session Title"
+msgstr "Enter Session Title"
+
+#: conv.py:319
+msgid "measurement information"
+msgstr "Measurement Information"
+
+#: conv.py:321
+msgid "Edit Reading"
+msgstr "Edit Reading"
+
+#: conv.py:323
+msgid "ra.title.theme"
+msgstr "Theme"
+
+#: conv.py:325
+msgid "ra.title.language"
+msgstr "Language"
+
+#: conv.py:327
+msgid "dashboard"
+msgstr "Dashboard"
+
+#: conv.py:329
+msgid "bosadmin"
+msgstr "Bos Admin"
+
+#: conv.py:331
+msgid "ra.menu.usergroup"
+msgstr "User group"
+
+#: users/models.py:102
+msgid "user with this email already exists"
+msgstr ""
+
+#: users/views.py:1071
+msgid "password do not match"
+msgstr ""

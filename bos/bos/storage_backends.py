@@ -14,20 +14,8 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-class ValidationException(Exception):
-    def __init__(self, errors):
-        # Call the base class constructor with the parameters it needs
-        super().__init__(errors)
-
-        # Now for your custom code...
-        self.errors = errors
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
-class SingleMessageValidationException(Exception):
-    def __init__(self, errors):
-        # Call the base class constructor with the parameters it needs
-        super().__init__(errors)
-
-        # Now for your custom code...
-        self.errors = errors
+class S3Storage(S3Boto3Storage):
+    file_overwrite = False

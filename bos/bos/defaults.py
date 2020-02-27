@@ -39,48 +39,46 @@ DEFAULT_NGO = "Bridges of Sports"
 DEFAULT_NGO_ADMIN_EMAIL = "admin@bridgesofsports.org"
 DEFAULT_NGO_ADMIN_USERNAME = "bos_admin"
 DEFAULT_NGO_ADMIN_FIRST_NAME = "BOS"
-
 DEFAULT_NGO_ADMIN_LAST_NAME = "Admin"
 
-DEFAULT_STUDENT_BASELINES = [('Has student migrated?', Measurement.TEXT, ''),
-                             ('Participated at division/zonal level last year?', Measurement.TEXT, ''),
-                             ('Participated at taluka level last year?', Measurement.TEXT, ''),
-                             ('Participated at district level last year?', Measurement.TEXT, ''),
-                             ('Participated at state level last year?', Measurement.TEXT, ''),
-                             ('Participated at national level last year?', Measurement.TEXT, ''),
-                             ('Participated at international level last year?', Measurement.TEXT, ''),
+DEFAULT_STUDENT_BASELINES = [('Has student migrated?', Measurement.BOOLEAN, ''),
+                             ('Participated at division/zonal level last year?', Measurement.BOOLEAN, ''),
+                             ('Participated at taluka level last year?', Measurement.BOOLEAN, ''),
+                             ('Participated at district level last year?', Measurement.BOOLEAN, ''),
+                             ('Participated at state level last year?', Measurement.BOOLEAN, ''),
+                             ('Participated at national level last year?', Measurement.BOOLEAN, ''),
+                             ('Participated at international level last year?', Measurement.BOOLEAN, ''),
                              ('Region', Measurement.TEXT, ''),
                              ('Father\'s occupation', Measurement.TEXT, ''),
                              ('Mother\'s occupation', Measurement.TEXT, ''),
-                             ('Annual income of family', Measurement.TEXT, ''),
-                             ('Number of Siblings', Measurement.TEXT, ''),
+                             ('Annual income of family', Measurement.NUMERIC, ''),
+                             ('Number of Siblings', Measurement.NUMERIC, ''),
                              ('Eldest sibling education', Measurement.TEXT, ''),
-                             # ('Events (100, 200 etc)', Measurement.TEXT, ''),
-                             ('Years spent in place of birth', Measurement.TEXT, '')
+                             ('Years spent in place of birth', Measurement.NUMERIC, '')
                              ]
 
 DEFAULT_COACH_BASELINES = [('Region', Measurement.TEXT, ''),
-                           ('Annual Salary', Measurement.TEXT, ''),
-                           ('Income from sports', Measurement.TEXT, ''),
-                           ('Martial Status (optional)', Measurement.TEXT, ''),
-                           ('Number of kids (optional)', Measurement.TEXT, ''),
-                           ('Number of boys trained last year', Measurement.TEXT, ''),
-                           ('Number of girls trained last year', Measurement.TEXT, ''),
-                           ('Average number of training hour provided last year', Measurement.TEXT, ''),
+                           ('Annual Salary', Measurement.NUMERIC, ''),
+                           ('Income from sports', Measurement.NUMERIC, ''),
+                           ('Martial Status', Measurement.TEXT, ''),
+                           ('Number of kids', Measurement.NUMERIC, ''),
+                           ('Number of boys trained last year', Measurement.NUMERIC, ''),
+                           ('Number of girls trained last year', Measurement.NUMERIC, ''),
+                           ('Average number of training hour provided last year', Measurement.NUMERIC, ''),
                            ]
 
-DEFAULT_STUDENT_PROGRESSIONS = [('100m dash time', Measurement.TEXT, ''),
-                                ('Leg raises', Measurement.TEXT, ''),
-                                ('BMI', Measurement.TEXT, ''),
-                                ('Pushups (1 min)', Measurement.TEXT, ''),
-                                ('Situps (1 min)', Measurement.TEXT, ''),
-                                ('Left leg squats (1 min)', Measurement.TEXT, ''),
-                                ('Right leg squats (1 min)', Measurement.TEXT, ''),
-                                ('Overhead throw (mt)', Measurement.TEXT, 'mt'),
-                                ('Broad Jump (mt)', Measurement.TEXT, 'mt'),
-                                ('Vertical Jump (mt)', Measurement.TEXT, 'mt'),
-                                ('Agility test', Measurement.TEXT, 'seconds'),
-                                ('Crunches (1 min)', Measurement.TEXT, ''),
+DEFAULT_STUDENT_PROGRESSIONS = [('100m dash time', Measurement.NUMERIC, 'seconds'),
+                                ('Leg raises', Measurement.NUMERIC, ''),
+                                ('BMI', Measurement.NUMERIC, ''),
+                                ('Pushups (1 min)', Measurement.NUMERIC, ''),
+                                ('Situps (1 min)', Measurement.NUMERIC, ''),
+                                ('Left leg squats (1 min)', Measurement.NUMERIC, ''),
+                                ('Right leg squats (1 min)', Measurement.NUMERIC, ''),
+                                ('Overhead throw', Measurement.NUMERIC, 'mt'),
+                                ('Broad Jump', Measurement.NUMERIC, 'mt'),
+                                ('Vertical Jump', Measurement.NUMERIC, 'mt'),
+                                ('Agility test', Measurement.NUMERIC, 'seconds'),
+                                ('Crunches (1 min)', Measurement.NUMERIC, ''),
                                 ('Beep test (levels)', Measurement.TEXT, ''), ]
 
 DEFAULT_PERMISSIONS_BLACKLIST = [

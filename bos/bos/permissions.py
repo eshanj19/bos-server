@@ -50,20 +50,20 @@ PERMISSIONS_TRAINING_SESSION = [PERMISSION_CAN_ADD_TRAINING_SESSION, PERMISSION_
 PERMISSION_CAN_ADD_FILE = ('add_file', 'Can add file', 'resources.add_file')
 PERMISSION_CAN_CHANGE_FILE = ('change_file', 'Can change file', 'resources.change_file')
 PERMISSION_CAN_DESTROY_FILE = ('delete_file', 'Can delete file', 'resources.delete_file')
-PERMISSION_CAN_VIEW_FILE = ('view_file', 'Can view file', 'files.view_file')
+PERMISSION_CAN_VIEW_FILE = ('view_file', 'Can view file', 'resources.view_file')
 PERMISSIONS_FILE = [PERMISSION_CAN_ADD_FILE, PERMISSION_CAN_CHANGE_FILE,
                     PERMISSION_CAN_DESTROY_FILE,
                     PERMISSION_CAN_VIEW_FILE]
 
 # REGISTRATION_FORM
 PERMISSION_CAN_ADD_REGISTRATION_FORM = (
-'add_registrationform', 'Can add registration form', 'resources.add_registrationform')
+    'add_registrationform', 'Can add registration form', 'resources.add_registrationform')
 PERMISSION_CAN_CHANGE_REGISTRATION_FORM = (
     'change_registrationform', 'Can change registration form', 'resources.change_registrationform')
 PERMISSION_CAN_DESTROY_REGISTRATION_FORM = (
     'delete_registrationform', 'Can delete registration form', 'resources.delete_registrationform')
 PERMISSION_CAN_VIEW_REGISTRATION_FORM = (
-'view_registrationform', 'Can view registration form', 'resources.view_registrationform')
+    'view_registrationform', 'Can view registration form', 'resources.view_registrationform')
 PERMISSIONS_REGISTRATION_FORM = [PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM,
                                  PERMISSION_CAN_DESTROY_REGISTRATION_FORM,
                                  PERMISSION_CAN_VIEW_REGISTRATION_FORM]
@@ -98,15 +98,6 @@ PERMISSION_CAN_VIEW_PERMISSION = ('view_permission', 'Can view permission', 'use
 PERMISSIONS_PERMISSION = [PERMISSION_CAN_ADD_PERMISSION, PERMISSION_CAN_CHANGE_PERMISSION,
                           PERMISSION_CAN_DESTROY_PERMISSION,
                           PERMISSION_CAN_VIEW_PERMISSION]
-# USERS
-PERMISSION_CAN_ADD_USER = ('add_user', 'Can add user', 'users.add_user')
-PERMISSION_CAN_CHANGE_USER = ('change_user', 'Can change user', 'users.change_user')
-PERMISSION_CAN_DESTROY_USER = ('delete_user', 'Can delete user', 'users.delete_user')
-PERMISSION_CAN_VIEW_USER = ('view_user', 'Can view user', 'users.view_user')
-PERMISSION_CAN_IMPORT_USERS = ('can_import', 'Can import user through excel file', 'users.can_import')
-PERMISSION_CAN_EXPORT_USERS = ('can_export', 'Can export user through excel file', 'users.can_export')
-PERMISSIONS_USER = [PERMISSION_CAN_ADD_USER, PERMISSION_CAN_CHANGE_USER, PERMISSION_CAN_DESTROY_USER,
-                    PERMISSION_CAN_VIEW_USER, PERMISSION_CAN_IMPORT_USERS, PERMISSION_CAN_EXPORT_USERS, ]
 
 # ADMINS
 PERMISSION_CAN_ADD_ADMIN = ('add_admin', 'Can add admin', 'users.add_admin')
@@ -172,45 +163,48 @@ PERMISSION_CAN_VIEW_READING = ('view_userreading', 'Can view user reading', 'use
 PERMISSIONS_READING = [PERMISSION_CAN_ADD_READING, PERMISSION_CAN_CHANGE_READING, PERMISSION_CAN_DESTROY_READING,
                        PERMISSION_CAN_VIEW_READING, ]
 
+# USER_HIERARCHY
+PERMISSION_CAN_ADD_USER_HIERARCHY = ('add_userhierarchy', 'Can add user hierarchy', 'users.add_userhierarchy')
+PERMISSION_CAN_CHANGE_USER_HIERARCHY = (
+    'change_userhierarchy', 'Can change user hierarchy', 'users.change_userhierarchy')
+PERMISSION_CAN_DESTROY_USER_HIERARCHY = (
+    'delete_userhierarchy', 'Can delete user hierarchy', 'users.delete_userhierarchy')
+PERMISSION_CAN_VIEW_USER_HIERARCHY = (
+    'view_userhierarchy', 'Can view user hierarchy', 'users.view_userhierarchy')
+PERMISSIONS_USER_HIERARCHY = [PERMISSION_CAN_ADD_USER_HIERARCHY, PERMISSION_CAN_CHANGE_USER_HIERARCHY,
+                              PERMISSION_CAN_DESTROY_USER_HIERARCHY,
+                              PERMISSION_CAN_VIEW_USER_HIERARCHY]
+
 DEFAULT_PERMISSIONS_NGO_ADMIN = PERMISSIONS_PERMISSION + PERMISSIONS_MEASUREMENT + PERMISSIONS_MEASUREMENT_TYPE + \
                                 PERMISSIONS_RESOURCE + PERMISSIONS_CURRICULUM + PERMISSIONS_FILE + \
                                 PERMISSIONS_TRAINING_SESSION + PERMISSIONS_COACH + PERMISSIONS_ATHLETE + \
                                 PERMISSIONS_ADMIN + PERMISSIONS_CUSTOM_USER_GROUP + PERMISSIONS_PERMISSION_GROUP + \
-                                PERMISSIONS_READING + PERMISSIONS_REGISTRATION_FORM
+                                PERMISSIONS_READING + PERMISSIONS_REGISTRATION_FORM + PERMISSIONS_USER_HIERARCHY
 
 DEFAULT_PERMISSIONS_BOS_NGO_ADMIN = PERMISSIONS_NGO + DEFAULT_PERMISSIONS_NGO_ADMIN
 
-DEFAULT_PERMISSIONS_COACH = []
+DEFAULT_PERMISSIONS_COACH = [PERMISSION_CAN_VIEW_CURRICULUM,
+                             PERMISSION_CAN_VIEW_RESOURCE,
+                             PERMISSION_CAN_VIEW_TRAINING_SESSION,
+                             PERMISSION_CAN_VIEW_FILE,
+                             PERMISSION_CAN_VIEW_REGISTRATION_FORM,
+                             PERMISSION_CAN_VIEW_MEASUREMENT,
+                             PERMISSION_CAN_VIEW_MEASUREMENT_TYPE,
+                             PERMISSION_CAN_VIEW_PERMISSION,
+                             PERMISSION_CAN_VIEW_ADMIN,
+                             PERMISSION_CAN_VIEW_COACH,
+                             PERMISSION_CAN_CHANGE_COACH,
+                             PERMISSION_CAN_VIEW_NGO,
+                             PERMISSION_CAN_VIEW_CUSTOM_USER_GROUP,
+                             PERMISSION_CAN_VIEW_READING,
+                             PERMISSION_CAN_ADD_READING
+                             ] + PERMISSIONS_ATHLETE
 
 
 def has_permission(request, permission):
     if request.user and request.user.has_perm(permission[2]):
         return True
     return False
-
-
-class CanAddUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_ADD_USER)
-
-
-class CanChangeUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_CHANGE_USER)
-
-
-class CanDeleteUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_DESTROY_USER)
-
-
-class CanViewUser(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        return has_permission(request, PERMISSION_CAN_VIEW_USER)
 
 
 class CanAddMeasurement(permissions.BasePermission):
@@ -451,3 +445,81 @@ class CanViewPermissionGroup(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return has_permission(request, PERMISSION_CAN_VIEW_PERMISSION_GROUP)
+
+
+class CanAddUserHierarchy(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_USER_HIERARCHY)
+
+
+class CanChangeUserHierarchy(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_USER_HIERARCHY)
+
+
+class CanDeleteUserHierarchy(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_USER_HIERARCHY)
+
+
+class CanViewUserHierarchy(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_USER_HIERARCHY)
+
+
+class CanAddRegistrationForm(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_REGISTRATION_FORM)
+
+
+class CanChangeRegistrationForm(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_REGISTRATION_FORM)
+
+
+class CanDeleteRegistrationForm(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_REGISTRATION_FORM)
+
+
+class CanViewRegistrationForm(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_REGISTRATION_FORM)
+
+
+class CanAddResource(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_ADD_RESOURCE)
+
+
+class CanChangeResource(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_CHANGE_RESOURCE)
+
+
+class CanDeleteResource(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_DESTROY_RESOURCE)
+
+
+class CanViewResource(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_CAN_VIEW_RESOURCE)
+
+
+class BOSAdmin(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return has_permission(request, PERMISSION_BOS_ADMIN)

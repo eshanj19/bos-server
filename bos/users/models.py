@@ -21,7 +21,8 @@ from django.utils.crypto import get_random_string
 from django.utils.translation import gettext as _
 
 from bos.constants import PUBLIC_KEY_LENGTH_USER, LENGTH_TOKEN, LENGTH_RESET_PASSWORD_TOKEN, FIELD_LENGTH_NAME, \
-    LENGTH_USERNAME, PUBLIC_KEY_LENGTH_USER_READING, PUBLIC_KEY_LENGTH_USER_GROUP, LENGTH_LABEL
+    LENGTH_USERNAME, PUBLIC_KEY_LENGTH_USER_READING, PUBLIC_KEY_LENGTH_USER_GROUP, LENGTH_LABEL, \
+    PUBLIC_KEY_LENGTH_USER_REQUEST
 from bos.permissions import PERMISSION_BOS_ADMIN, PERMISSION_CAN_ADD_COACH, PERMISSION_CAN_CHANGE_COACH, \
     PERMISSION_CAN_DESTROY_COACH, PERMISSION_CAN_VIEW_COACH, PERMISSION_CAN_ADD_ATHLETE, PERMISSION_CAN_CHANGE_ATHLETE, \
     PERMISSION_CAN_DESTROY_ATHLETE, PERMISSION_CAN_VIEW_ATHLETE, PERMISSION_CAN_ADD_ADMIN, PERMISSION_CAN_CHANGE_ADMIN, \
@@ -33,6 +34,10 @@ from bos.permissions import PERMISSION_BOS_ADMIN, PERMISSION_CAN_ADD_COACH, PERM
 
 def generate_user_key():
     return get_random_string(PUBLIC_KEY_LENGTH_USER)
+
+
+def generate_user_request_key():
+    return get_random_string(PUBLIC_KEY_LENGTH_USER_REQUEST)
 
 
 def generate_user_reading_key():
@@ -78,6 +83,7 @@ class User(AbstractUser):
         (MALE, 'Male'),
         (FEMALE, 'Female'),
     )
+    SUPPORTED_LANGUAGES = [language_code for language_code, _ in LANGUAGES]
 
     key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER,
                            default=generate_user_key, unique=True)
@@ -94,14 +100,14 @@ class User(AbstractUser):
                              null=True,
                              blank=True,
                              error_messages={
-                                 'unique': _("user with this email already exists."),
+                                 'unique': _("user with this email already exists"),
                              })
     password = models.CharField(max_length=1024, null=True, blank=True)
     is_active = models.BooleanField(default=True, blank=True)
     role = models.CharField(max_length=10, choices=ROLES,
                             null=False, blank=False)
     gender = models.CharField(max_length=10, choices=GENDERS,
-                            null=False, blank=False)
+                              null=False, blank=False)
     language = models.CharField(
         max_length=5, choices=LANGUAGES, default=ENGLISH, null=False, blank=True)
     reset_password = models.BooleanField(default=True)
@@ -112,7 +118,7 @@ class User(AbstractUser):
     def name(self):
         return ''.join(
             [self.first_name, ' ', self.middle_name, ' ', self.last_name])
-    
+
     @property
     def full_name(self):
         if self.middle_name:
@@ -121,7 +127,6 @@ class User(AbstractUser):
         else:
             return ''.join(
                 [self.first_name, ' ', self.last_name])
-            
 
     class Meta:
         db_table = 'users'
@@ -176,15 +181,11 @@ class UserReading(models.Model):
                                    related_name='entered_by')
     measurement = models.ForeignKey(
         'measurements.Measurement', null=False, blank=False, on_delete=models.PROTECT)
-    resource = models.ForeignKey('resources.Resource', related_name='resource', null=True, blank=True,
-                                 on_delete=models.PROTECT)
-    resource_session = models.ForeignKey('resources.Resource', related_name='resource_session', null=True,
-                                         blank=True, on_delete=models.PROTECT)
-    resource_session_uuid = models.CharField(
-        max_length=100, null=True, blank=True)
-    type = models.CharField(max_length=100, null=True, blank=True)
+    training_session_uuid = models.UUIDField(null=True, blank=True)
+    evaluation_resource_uuid = models.UUIDField(null=True, blank=True)
     value = models.CharField(max_length=50, null=False, blank=False)
     is_active = models.BooleanField(default=True, null=False, blank=True)
+    recorded_at = models.DateTimeField(auto_now=False, auto_now_add=False, blank=False, null=False)
     creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
     last_modification_time = models.DateTimeField(auto_now=True)
 
@@ -246,3 +247,51 @@ class UserGroup(models.Model):
 
     class Meta:
         db_table = 'user_groups'
+
+
+class UserRequest(models.Model):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+    STATUSES = (
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected')
+    )
+    key = models.CharField(max_length=PUBLIC_KEY_LENGTH_USER_REQUEST,
+                           default=generate_user_request_key, unique=True)
+    first_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=False, blank=False)
+    middle_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=True, blank=True)
+    last_name = models.CharField(
+        max_length=FIELD_LENGTH_NAME, null=False, blank=False)
+    ngo = models.ForeignKey('ngos.NGO', null=True,
+                            blank=True, on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True, blank=True)
+    data = JSONField()
+    role = models.CharField(max_length=10, choices=User.ROLES,
+                            null=False, blank=False)
+    gender = models.CharField(max_length=10, choices=User.GENDERS,
+                              null=False, blank=False)
+    status = models.CharField(
+        max_length=15, choices=STATUSES, default=PENDING, null=False, blank=False)
+    creation_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    last_modification_time = models.DateTimeField(auto_now=True)
+
+    @property
+    def name(self):
+        return ''.join(
+            [self.first_name, ' ', self.middle_name, ' ', self.last_name])
+
+    @property
+    def full_name(self):
+        if self.middle_name:
+            return ''.join(
+                [self.first_name, ' ', self.middle_name, ' ', self.last_name])
+        else:
+            return ''.join(
+                [self.first_name, ' ', self.last_name])
+
+    class Meta:
+        db_table = 'user_requests'

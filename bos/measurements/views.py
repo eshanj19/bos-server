@@ -18,10 +18,13 @@ from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from django.utils.translation import gettext as _
 
 from bos.exceptions import ValidationException
 from bos.pagination import BOSPageNumberPagination
-from bos.permissions import has_permission, PERMISSION_CAN_VIEW_MEASUREMENT
+from bos.permissions import has_permission, PERMISSION_CAN_VIEW_MEASUREMENT, PERMISSION_CAN_ADD_MEASUREMENT, \
+    PERMISSION_CAN_CHANGE_MEASUREMENT, PERMISSION_CAN_DESTROY_MEASUREMENT, PERMISSION_CAN_VIEW_MEASUREMENT_TYPE, \
+    PERMISSION_CAN_ADD_MEASUREMENT_TYPE, PERMISSION_CAN_CHANGE_MEASUREMENT_TYPE, PERMISSION_CAN_DESTROY_MEASUREMENT_TYPE
 from bos.utils import measurement_filters_from_request, measurement_type_filters_from_request
 from measurements.models import Measurement, MeasurementType
 from measurements.serializers import MeasurementSerializer, MeasurementTypeSerializer
@@ -49,7 +52,7 @@ class MeasurementViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_ADD_MEASUREMENT):
             return Response(status=403)
 
         create_data = request.data
@@ -68,13 +71,15 @@ class MeasurementViewSet(ViewSet):
             return Response(e.errors, status=400)
 
     def retrieve(self, request, pk=None):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+            return Response(status=403)
         queryset = Measurement.objects.all()
         item = get_object_or_404(queryset, key=pk)
         serializer = MeasurementSerializer(item)
         return Response(serializer.data)
 
     def update(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_CHANGE_MEASUREMENT):
             return Response(status=403)
 
         try:
@@ -88,7 +93,7 @@ class MeasurementViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_MEASUREMENT):
             return Response(status=403)
 
         try:
@@ -99,10 +104,12 @@ class MeasurementViewSet(ViewSet):
         return Response(status=204)
 
 
+
+
 class MeasurementTypeViewSet(ViewSet):
 
     def list(self, request):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT_TYPE):
             return Response(status=403)
 
         measurement_type_filters, search_filters = measurement_type_filters_from_request(request.GET)
@@ -121,7 +128,7 @@ class MeasurementTypeViewSet(ViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     def create(self, request):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_ADD_MEASUREMENT_TYPE):
             return Response(status=403)
 
         create_data = request.data
@@ -133,7 +140,7 @@ class MeasurementTypeViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def retrieve(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT_TYPE):
             return Response(status=403)
 
         queryset = MeasurementType.objects.all()
@@ -142,7 +149,7 @@ class MeasurementTypeViewSet(ViewSet):
         return Response(serializer.data)
 
     def update(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_CHANGE_MEASUREMENT_TYPE):
             return Response(status=403)
 
         try:
@@ -156,7 +163,7 @@ class MeasurementTypeViewSet(ViewSet):
         return Response(serializer.errors, status=400)
 
     def destroy(self, request, pk=None):
-        if not has_permission(request, PERMISSION_CAN_VIEW_MEASUREMENT):
+        if not has_permission(request, PERMISSION_CAN_DESTROY_MEASUREMENT_TYPE):
             return Response(status=403)
 
         try:

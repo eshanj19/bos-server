@@ -36,7 +36,9 @@ router.register(r'measurements', measurement_views.MeasurementViewSet, 'Measurem
 router.register(r'measurement_types', measurement_views.MeasurementTypeViewSet, 'MeasurementType')
 router.register(r'permission_groups', user_views.PermissionGroupViewSet, 'PermissionGroup')
 router.register(r'resources', resource_views.ResourceViewSet, 'Resource')
+router.register(r'evaluation_resources', resource_views.EvaluationResourceViewSet, 'EvaluationResource')
 router.register(r'readings', user_views.UserReadingViewSet, 'UserReading')
+router.register(r'requests', user_views.UserRequestViewSet, 'UserRequest')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
@@ -51,4 +53,3 @@ urlpatterns = [
     # url(r'^translations', user_views.translations, name='translations'),
 
 ]
-

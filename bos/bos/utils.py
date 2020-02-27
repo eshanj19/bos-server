@@ -14,12 +14,11 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from django.db.models import Q
-
-from bos.constants import MESSAGE_KEY
 from django.utils.translation import gettext as _
 
+from bos.constants import MESSAGE_KEY, VALID_FILE_EXTENSIONS
 from users.models import UserHierarchy, User
-from users.serializers import UserHierarchyReadSerializer, UserHierarchySerializer, UserRestrictedDetailSerializer
+from users.serializers import UserHierarchySerializer, UserRestrictedDetailSerializer
 
 
 def get_ngo_group_name(ngo, name):
@@ -30,9 +29,7 @@ def user_sort_by_value(sort, order):
     order_by = None
     # if sort == 'first_name':
     #     order_by = 'first_name'
-    print(sort, order)
     order_by = sort
-
     if order == 'ASC':
         return order_by
     if order == 'DESC':
@@ -187,34 +184,59 @@ def user_group_filters_from_request(request_data):
 def user_reading_filters_from_request(request_data):
     user_reading_filter = {}
     available_user_reading_filters = ['is_active']
-    available_user_reading_search_filters = ['measurement','athlete']
+    available_user_reading_search_filters = ['measurement', 'athlete']
 
-    for available_user_group_filter in available_user_reading_filters:
-        if available_user_group_filter in request_data:
-            value = request_data.get(available_user_group_filter)
+    for available_user_reading_filter in available_user_reading_filters:
+        if available_user_reading_filter in request_data:
+            value = request_data.get(available_user_reading_filter)
             if value.lower() == 'false':
-                user_reading_filter[available_user_group_filter] = False
+                user_reading_filter[available_user_reading_filter] = False
             else:
-                user_reading_filter[available_user_group_filter] = True
+                user_reading_filter[available_user_reading_filter] = True
 
     search_filter = Q()
     for available_user_reading_search_filter in available_user_reading_search_filters:
         if available_user_reading_search_filter in request_data:
             value = request_data.get(available_user_reading_search_filter)
             if available_user_reading_search_filter == 'athlete':
-                search_filter = search_filter & (Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                search_filter = search_filter & (
+                        Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
             if available_user_reading_search_filter == 'measurement':
                 search_filter = search_filter & Q(measurement__key=value)
 
     return user_reading_filter, search_filter
 
 
+def user_request_filters_from_request(request_data):
+    user_request_filter = {}
+    available_user_reading_filters = ['is_active']
+    available_user_request_search_filters = ['first_name']
+
+    for available_user_request_filter in available_user_reading_filters:
+        if available_user_request_filter in request_data:
+            value = request_data.get(available_user_request_filter)
+            if value.lower() == 'false':
+                user_request_filter[available_user_request_filter] = False
+            else:
+                user_request_filter[available_user_request_filter] = True
+
+    search_filter = Q()
+    for available_user_request_search_filter in available_user_request_search_filters:
+        if available_user_request_search_filter in request_data:
+            value = request_data.get(available_user_request_search_filter)
+            if available_user_request_search_filter == 'first_name':
+                search_filter = search_filter & (
+                        Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+
+    return user_request_filter, search_filter
+
+
 def convert_validation_error_into_response_error(validation_error):
     return {'password': validation_error}
 
-def error_checkone(message):
-    return {MESSAGE_KEY:_(message)}
 
+def error_checkone(message):
+    return {MESSAGE_KEY: _(message)}
 
 
 def error_400_json():
@@ -223,6 +245,14 @@ def error_400_json():
 
 def error_403_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_403')}
+
+
+def error_file_extension_json():
+    return {MESSAGE_KEY: _('Unsupported file extension')}
+
+
+def request_status(message):
+    return {MESSAGE_KEY: _(message)}
 
 
 def error_404_json():
@@ -263,6 +293,12 @@ def request_user_belongs_to_reading(request, reading):
     return False
 
 
+def request_user_belongs_to_user_request_ngo(request, user_request):
+    if request.user and request.user.ngo and request.user.ngo.key == user_request.ngo.key:
+        return True
+    return False
+
+
 def find_athletes_under_user(user):
     user_ids = find_user_ids_under_users([user.id], [])
     queryset = User.objects.filter(id__in=user_ids, role=User.ATHLETE)
@@ -280,3 +316,9 @@ def find_user_ids_under_users(user_ids, previous_children):
         return previous_children
     else:
         return find_user_ids_under_users(children, previous_children + children)
+
+
+def is_extension_valid(extension):
+    if extension.lower() in VALID_FILE_EXTENSIONS:
+        return True
+    return False

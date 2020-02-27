@@ -189,7 +189,6 @@ class Command(BaseCommand):
                 #             raise ValidationException(serializer.errors)
                 #         serializer.save()
 
-
         except DatabaseError:
             return
         except ValidationException as e:
