@@ -57,7 +57,6 @@ def _superset_init():
             ).values_list(
                 'key',
                 'measurement_label',
-                'type',
                 'value',
                 'user_full_name',
                 'user_gender',
