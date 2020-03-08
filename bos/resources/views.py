@@ -64,8 +64,6 @@ class ResourceViewSet(ViewSet):
 
     def create(self, request):
 
-        create_data = request.data.copy()
-        create_data['ngo'] = request.user.ngo.key
         resource_type = request.data.get('type', None)
         resource_data = request.data.get('data', None)
 
@@ -83,6 +81,9 @@ class ResourceViewSet(ViewSet):
         if resource_type == Resource.REGISTRATION_FORM and not has_permission(request,
                                                                               PERMISSION_CAN_ADD_REGISTRATION_FORM):
             return Response(status=403, data=error_403_json())
+
+        create_data = request.data
+        create_data['ngo'] = request.user.ngo.key
 
         try:
             with transaction.atomic():

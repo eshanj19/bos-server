@@ -210,7 +210,7 @@ def user_reading_filters_from_request(request_data):
 def user_request_filters_from_request(request_data):
     user_request_filter = {}
     available_user_reading_filters = ['is_active']
-    available_user_request_search_filters = ['first_name']
+    available_user_request_search_filters = ['name', 'status']
 
     for available_user_request_filter in available_user_reading_filters:
         if available_user_request_filter in request_data:
@@ -224,9 +224,12 @@ def user_request_filters_from_request(request_data):
     for available_user_request_search_filter in available_user_request_search_filters:
         if available_user_request_search_filter in request_data:
             value = request_data.get(available_user_request_search_filter)
-            if available_user_request_search_filter == 'first_name':
+            if available_user_request_search_filter == 'name':
                 search_filter = search_filter & (
-                        Q(user__first_name__icontains=value) | Q(user__last_name__icontains=value))
+                        Q(first_name__icontains=value) | Q(last_name__icontains=value))
+            if available_user_request_search_filter == 'status':
+                search_filter = search_filter & (
+                        Q(status=value))
 
     return user_request_filter, search_filter
 
