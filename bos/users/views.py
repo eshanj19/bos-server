@@ -1003,7 +1003,6 @@ class UserRequestViewSet(ViewSet):
 
     @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
     def request_accept(self, request, pk=None):
-
         try:
             user_request = UserRequest.objects.filter(key=pk, status=UserRequest.PENDING).first()
         except UserRequest.DoesNotExist:
@@ -1013,7 +1012,6 @@ class UserRequestViewSet(ViewSet):
         coach_data['first_name'] = user_request.first_name
         coach_data['middle_name'] = user_request.middle_name
         coach_data['last_name'] = user_request.last_name
-        coach_data['status'] = user_request.status
         coach_data['gender'] = user_request.gender
         coach_data['username'] = request.data.get('username')
         coach_data['ngo'] = request.user.ngo.key

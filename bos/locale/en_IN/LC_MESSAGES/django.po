@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-24 13:59+0530\n"
+"POT-Creation-Date: 2020-03-06 17:28+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,649 +25,677 @@ msgstr ""
 msgid "ERROR_MESSAGE_403"
 msgstr ""
 
-#: bos/utils.py:255
-msgid "ERROR_MESSAGE_404"
+#: bos/utils.py:251
+msgid "Unsupported file extension"
 msgstr ""
 
 #: bos/utils.py:259
+msgid "ERROR_MESSAGE_404"
+msgstr ""
+
+#: bos/utils.py:263
 msgid "ERROR_MESSAGE_500"
 msgstr ""
 
-#: conv.py:19
+#: translation_keys.py:3
 msgid "ra.action.save"
 msgstr "Save"
 
-#: conv.py:21
+#: translation_keys.py:4
 msgid "ra.action.create"
 msgstr "Create"
 
-#: conv.py:23
+#: translation_keys.py:5
 msgid "ra.action.edit"
 msgstr "Edit"
 
-#: conv.py:25
+#: translation_keys.py:6
 msgid "ra.action.delete"
 msgstr "Delete"
 
-#: conv.py:27
+#: translation_keys.py:7
 msgid "ra.action.add_filter"
 msgstr "Add Filter"
 
-#: conv.py:29
+#: translation_keys.py:8
 msgid "ra.action.add"
 msgstr "Add"
 
-#: conv.py:31
+#: translation_keys.py:9
 msgid "ra.action.back"
 msgstr "Back"
 
-#: conv.py:33
+#: translation_keys.py:10
 msgid "ra.action.bulk_actions"
 msgstr "Bulk Actions"
 
-#: conv.py:35
+#: translation_keys.py:11
 msgid "ra.action.bulk_cancel"
 msgstr "Bulk Cancel"
 
-#: conv.py:37
+#: translation_keys.py:12
 msgid "ra.action.clear_input_value"
 msgstr "Clear input value"
 
-#: conv.py:39
+#: translation_keys.py:13
 msgid "ra.action.export"
 msgstr "Export"
 
-#: conv.py:41
+#: translation_keys.py:14
 msgid "ra.action.list"
 msgstr "List"
 
-#: conv.py:43
+#: translation_keys.py:15
 msgid "ra.action.remove_filter"
 msgstr "Remove Filter"
 
-#: conv.py:45
+#: translation_keys.py:16
 msgid "ra.action.remove"
 msgstr "Remove"
 
-#: conv.py:47
+#: translation_keys.py:17
 msgid "ra.action.search"
 msgstr "Search"
 
-#: conv.py:49
+#: translation_keys.py:18
 msgid "ra.action.show"
 msgstr "Show"
 
-#: conv.py:51
+#: translation_keys.py:19
 msgid "ra.boolean.true"
 msgstr "True"
 
-#: conv.py:53
+#: translation_keys.py:20
 msgid "ra.boolean.false"
 msgstr "False"
 
-#: conv.py:55
+#: translation_keys.py:21
 msgid "ra.action.refresh"
 msgstr "Refresh"
 
-#: conv.py:57
+#: translation_keys.py:22
 msgid "ra.validation.required"
 msgstr "Required"
 
-#: conv.py:59
+#: translation_keys.py:23
 msgid "ra.validation.minLength"
 msgstr ""
 
-#: conv.py:61
+#: translation_keys.py:24
 msgid "ra.validation.maxLength"
 msgstr ""
 
-#: conv.py:63
+#: translation_keys.py:25
 msgid "ra.validation.minValue"
 msgstr ""
 
-#: conv.py:65
+#: translation_keys.py:26
 msgid "ra.validation.maxValue"
 msgstr ""
 
-#: conv.py:67
+#: translation_keys.py:27
 msgid "ra.validation.number"
 msgstr ""
 
-#: conv.py:69
+#: translation_keys.py:28
 msgid "ra.validation.email"
 msgstr "Email"
 
-#: conv.py:71
+#: translation_keys.py:29
 msgid "ra.validation.oneOf"
 msgstr ""
 
-#: conv.py:73
+#: translation_keys.py:30
 msgid "ra.validation.regex"
 msgstr ""
 
-#: conv.py:75
+#: translation_keys.py:31
 msgid "ra.title.first_name"
 msgstr "First name"
 
-#: conv.py:77
+#: translation_keys.py:32
 msgid "ra.title.middle_name"
 msgstr "Middle name"
 
-#: conv.py:79
+#: translation_keys.py:33
 msgid "ra.title.last_name"
 msgstr "Last name"
 
-#: conv.py:81
+#: translation_keys.py:34
 msgid "ra.title.current_password"
 msgstr "Current Password"
 
-#: conv.py:83
+#: translation_keys.py:35
 msgid "ra.title.password"
 msgstr "Password"
 
-#: conv.py:85
+#: translation_keys.py:36
 msgid "ra.title.gender"
 msgstr "Gender"
 
-#: conv.py:87
+#: translation_keys.py:37
 msgid "ra.title.full_name"
 msgstr "Full Name"
 
-#: conv.py:89
+#: translation_keys.py:38
 msgid "ra.title.email"
 msgstr "Email"
 
-#: conv.py:91
+#: translation_keys.py:39
 msgid "ra.action.active"
 msgstr "Active"
 
-#: conv.py:93
+#: translation_keys.py:40
 msgid "ra.title.created_on"
 msgstr "Created on"
 
-#: conv.py:95
+#: translation_keys.py:41
 msgid "ra.title.last_mod"
 msgstr "Last Modification"
 
-#: conv.py:97
+#: translation_keys.py:42
 msgid "ra.title.username"
 msgstr "Username"
 
-#: conv.py:99
+#: translation_keys.py:43
 msgid "ra.title.confirm_password"
 msgstr "Confirm Password"
 
-#: conv.py:101
+#: translation_keys.py:44
 msgid "ra.title.permission_group"
 msgstr "Permission Group"
 
-#: conv.py:103
+#: translation_keys.py:45
 msgid "ra.title.name"
 msgstr "Name"
 
-#: conv.py:105
+#: translation_keys.py:46
 msgid "ra.title.users"
 msgstr "Users"
 
-#: conv.py:107
+#: translation_keys.py:47
 msgid "ra.title.resources"
 msgstr "Resources"
 
-#: conv.py:109
+#: translation_keys.py:48
 msgid "ra.option.curriculum"
 msgstr "Curriculum"
 
-#: conv.py:111
+#: translation_keys.py:49
 msgid "ra.option.training_session"
 msgstr "Training Session"
 
-#: conv.py:113
+#: translation_keys.py:50
 msgid "ra.option.file"
 msgstr "File"
 
-#: conv.py:115
+#: translation_keys.py:51
 msgid "ra.option.registration_form"
 msgstr "Registration Form"
 
-#: conv.py:117
+#: translation_keys.py:52
 msgid "ra.title.description"
 msgstr "Description"
 
-#: conv.py:119
+#: translation_keys.py:53
 msgid "ra.title.day"
 msgstr "Day"
 
-#: conv.py:121
+#: translation_keys.py:54
 msgid "ra.title.type"
 msgstr "Type"
 
-#: conv.py:123
+#: translation_keys.py:55
 msgid "ra.title.label"
 msgstr "Label"
 
-#: conv.py:125
+#: translation_keys.py:56
 msgid "ra.title.uom"
 msgstr "uom"
 
-#: conv.py:127
+#: translation_keys.py:57
 msgid "ra.title.inputtype"
 msgstr "input type"
 
-#: conv.py:129
+#: translation_keys.py:58
 msgid "ra.title.measurements"
 msgstr "Measurements"
 
-#: conv.py:131
+#: translation_keys.py:59
 msgid "ra.title.athlete"
-msgstr "Athlete"
+msgstr "Athletes"
 
-#: conv.py:133
+#: translation_keys.py:60
 msgid "ra.title.value"
 msgstr "Value"
 
-#: conv.py:135
+#: translation_keys.py:61
 msgid "ra.action.submit"
 msgstr "Submit"
 
-#: conv.py:137
+#: translation_keys.py:62
 msgid "ra.title.name_of_ngo"
 msgstr "Name of NGO"
 
-#: conv.py:139
+#: translation_keys.py:63
 msgid "ra.title.first_name_ngo_admin"
 msgstr "First Name of NGO Admin"
 
-#: conv.py:141
+#: translation_keys.py:64
 msgid "ra.title.last_name_ngo_admin"
 msgstr "Last Name of NGO Admin"
 
-#: conv.py:143
+#: translation_keys.py:65
 msgid "ra.title.username_ngo_admin"
 msgstr "Username of NGO admin"
 
-#: conv.py:145
+#: translation_keys.py:66
 msgid "ra.title.emailaddress_ngo_admin"
 msgstr "Email Address of NGO Admin"
 
-#: conv.py:147
+#: translation_keys.py:67
 msgid "ra.menu.reading"
 msgstr "Reading"
 
-#: conv.py:149
+#: translation_keys.py:68
 msgid "ra.menu.measurement_type"
 msgstr "Measurement Type"
 
-#: conv.py:151
+#: translation_keys.py:69
 msgid "ra.menu.ngos"
 msgstr "Ngos"
 
-#: conv.py:153
+#: translation_keys.py:70
 msgid "ra.title.set_parent"
 msgstr "Set Parent"
 
-#: conv.py:155
+#: translation_keys.py:71
 msgid "ra.title.names_of_permission_group"
 msgstr "Name of Permission Group"
 
-#: conv.py:157
+#: translation_keys.py:72
 msgid "ra.title.is_active"
 msgstr "is active"
 
-#: conv.py:159
+#: translation_keys.py:73
 msgid "ra.title.view_edit_organisation"
 msgstr "View/Edit Organisation"
 
-#: conv.py:161
+#: translation_keys.py:74
 msgid "ra.theme.light"
 msgstr "light"
 
-#: conv.py:163
+#: translation_keys.py:75
 msgid "ra.theme.dark"
 msgstr "Dark"
 
-#: conv.py:165
+#: translation_keys.py:76
 msgid "Create Measurement type"
 msgstr "Create Measurement type"
 
-#: conv.py:167
+#: translation_keys.py:77
 msgid "ra.title.recorded_on"
 msgstr "recorded_on"
 
-#: conv.py:169
+#: translation_keys.py:78
 msgid "ra.action.next"
 msgstr "Next"
 
-#: conv.py:171
+#: translation_keys.py:79
 msgid "applicant's details"
-msgstr "Apllicant's Details"
+msgstr "Applicant Details"
 
-#: conv.py:173
+#: translation_keys.py:80
 msgid "ra.language.en"
 msgstr "En"
 
-#: conv.py:175
+#: translation_keys.py:81
 msgid "ra.language.hi"
 msgstr "Hi"
 
-#: conv.py:177
+#: translation_keys.py:82
 msgid "configuration"
 msgstr "Configuration"
 
-#: conv.py:179
+#: translation_keys.py:83
 msgid "logout"
 msgstr "Logout"
 
-#: conv.py:181
+#: translation_keys.py:84
 msgid "login"
 msgstr "Login"
 
-#: conv.py:183
+#: translation_keys.py:85
 msgid "ra.menu.admins"
 msgstr "Admins"
 
-#: conv.py:185
+#: translation_keys.py:86
 msgid "ra.menu.requests"
 msgstr "Requests"
 
-#: conv.py:187
+#: translation_keys.py:87
 msgid "List of user groups"
 msgstr "List of user groups"
 
-#: conv.py:189
+#: translation_keys.py:88
 msgid "List of permission groups"
 msgstr "List of permission groups"
 
-#: conv.py:191
+#: translation_keys.py:89
 msgid "ra.title.role"
 msgstr "role"
 
-#: conv.py:193
+#: translation_keys.py:90
 msgid "ra.title.date"
 msgstr "Date"
 
-#: conv.py:195
+#: translation_keys.py:91
 msgid "ra.title.status"
 msgstr "Status"
 
-#: conv.py:197
+#: translation_keys.py:92
 msgid "ra.action.mandatory"
 msgstr "Mandatory"
 
-#: conv.py:199
+#: translation_keys.py:93
 msgid " Create Curriculum"
 msgstr " Create Curriculum"
 
-#: conv.py:201
+#: translation_keys.py:94
 msgid "Create Training Session"
 msgstr "Create Training Session"
 
-#: conv.py:203
+#: translation_keys.py:95
 msgid "Create File Resource"
 msgstr "Create File Resource"
 
-#: conv.py:205
+#: translation_keys.py:96
 msgid "Create Registration Form"
 msgstr "Create Registration Form"
 
-#: conv.py:207
+#: translation_keys.py:97
 msgid "ra.action.add_measurement"
 msgstr "Add Measurement"
 
-#: conv.py:209
+#: translation_keys.py:98
 msgid "ra.action.add_file"
 msgstr "Add File"
 
-#: conv.py:211
+#: translation_keys.py:99
 msgid "ra.action.select_file"
 msgstr "Select File"
 
-#: conv.py:213
+#: translation_keys.py:100
 msgid "Edit curriculum"
 msgstr "Edit Curriculum"
 
-#: conv.py:215
+#: translation_keys.py:101
 msgid "Edit training session"
 msgstr "Edit Training Session"
 
-#: conv.py:217
+#: translation_keys.py:102
 msgid "Edit file resources"
 msgstr "Edit FileResources"
 
-#: conv.py:219
+#: translation_keys.py:103
 msgid "Edit registration form"
 msgstr "Edit Registration Form"
 
-#: conv.py:221
+#: translation_keys.py:104
 msgid "Select a file to upload"
 msgstr ""
 "Select a file to upload_Maximum file size:5 MB.All file types are supported"
 
-#: conv.py:223
+#: translation_keys.py:105
 #, fuzzy
 #| msgid "Set As Athlete Registration"
 msgid " Set As Athlete Registration"
 msgstr "Set As Athlete Registration"
 
-#: conv.py:225
+#: translation_keys.py:106
 msgid "Set As Coach Registration"
 msgstr "Set As Coach Registration"
 
-#: conv.py:227
+#: translation_keys.py:107
 msgid "ra.action.activate"
 msgstr "Activate"
 
-#: conv.py:229
+#: translation_keys.py:108
 msgid "a.action.deactivate"
 msgstr "Deactivate"
 
-#: conv.py:231
+#: translation_keys.py:109
 msgid "Members with no athlete/coach relationship"
 msgstr "Members with no athlete/coach relationship"
 
-#: conv.py:233
+#: translation_keys.py:110
 msgid "ra.action.reset_password"
 msgstr "Reset Password"
 
-#: conv.py:235
+#: translation_keys.py:111
 msgid "ra.action.cancel"
 msgstr "Cancel"
 
-#: conv.py:237
+#: translation_keys.py:112
 msgid "ra.action.reset"
 msgstr "Reset"
 
-#: conv.py:239
+#: translation_keys.py:113
 msgid "ra.title.no_members"
 msgstr "No members"
 
-#: conv.py:241
+#: translation_keys.py:114
 msgid "ra.title.empty"
 msgstr "empty"
 
-#: conv.py:243
+#: translation_keys.py:115
+msgid "ra.title.request_show"
+msgstr "Request show"
+
+#: translation_keys.py:116
 msgid "ra.menu.coaches"
 msgstr "Coaches"
 
-#: conv.py:245
+#: translation_keys.py:117
 msgid "ra.menu.organisation"
 msgstr "Organisation"
 
-#: conv.py:247
+#: translation_keys.py:118
 msgid "Welcome to Bridges of Sports platform"
 msgstr "Welcome to Bridges of Sports platform"
 
-#: conv.py:249
+#: translation_keys.py:119
 msgid "edit ngo"
 msgstr "Edit Ngo"
 
-#: conv.py:251
+#: translation_keys.py:120
 msgid "create ngo"
 msgstr "Create Ngo"
 
-#: conv.py:253
+#: translation_keys.py:121
 msgid "create admin"
 msgstr "Create Admin"
 
-#: conv.py:255
+#: translation_keys.py:122
 msgid "edit admin"
 msgstr "Edit Admin"
 
-#: conv.py:257
+#: translation_keys.py:123
 msgid "edit coach"
 msgstr "Edit Coach"
 
-#: conv.py:259
+#: translation_keys.py:124
 msgid "create coach"
 msgstr "Create Coach"
 
-#: conv.py:261
-msgid "edit athelete"
-msgstr "Edit Athelet"
+#: translation_keys.py:125
+msgid "edit athlete"
+msgstr "Edit Athlete"
 
-#: conv.py:263
+#: translation_keys.py:126
 msgid "create athlete"
-msgstr "Create Athelet"
+msgstr "Create Athlete"
 
-#: conv.py:265
+#: translation_keys.py:127
 msgid "create user group"
 msgstr "Create User group"
 
-#: conv.py:267
+#: translation_keys.py:128
 msgid "edit user group"
 msgstr "Edit User group"
 
-#: conv.py:269
+#: translation_keys.py:129
 msgid "create request"
 msgstr "Create Request"
 
-#: conv.py:271
+#: translation_keys.py:130
 msgid "edit request"
 msgstr "Edit Requests"
 
-#: conv.py:273
+#: translation_keys.py:131
 msgid "edit measurements"
 msgstr "Edit Measurement"
 
-#: conv.py:275
+#: translation_keys.py:132
 msgid "create measuremet"
 msgstr "Create Measurement"
 
-#: conv.py:277
+#: translation_keys.py:133
 msgid "ra.action.accept"
 msgstr "Accept"
 
-#: conv.py:279
+#: translation_keys.py:134
 msgid "ra.action.decline"
 msgstr "Decline"
 
-#: conv.py:281
+#: translation_keys.py:135
 msgid "ra.action.set"
 msgstr "Set"
 
-#: conv.py:283
+#: translation_keys.py:136
 msgid "Choose username and password"
 msgstr "Choose username and password"
 
-#: conv.py:285
+#: translation_keys.py:137
 msgid "ra.title.enter_password"
 msgstr "Enter password"
 
-#: conv.py:287
+#: translation_keys.py:138
 msgid "ra.title.curriculum_name"
 msgstr "Curriculum Name"
 
-#: conv.py:289
+#: translation_keys.py:139
 msgid "ra.title.curriculum_description"
 msgstr " Curriculum Description"
 
-#: conv.py:291
+#: translation_keys.py:140
 msgid "ra.title.enter_day_title"
 msgstr "Enter day title"
 
-#: conv.py:293
+#: translation_keys.py:141
 msgid "ra.action.add_session"
 msgstr "Add Session"
 
-#: conv.py:295
+#: translation_keys.py:142
 msgid "ra.action.add_day"
 msgstr "Add day"
 
-#: conv.py:297
+#: translation_keys.py:143
 msgid "ra.title.enter_item_title"
 msgstr "Enter item title"
 
-#: conv.py:299
+#: translation_keys.py:144
 msgid "ra.title.file_name"
 msgstr "File Name"
 
-#: conv.py:301
+#: translation_keys.py:145
 msgid "ra.title.file_description"
 msgstr "File Description"
 
-#: conv.py:303
+#: translation_keys.py:146
 msgid "file resource"
 msgstr "File resource"
 
-#: conv.py:305
+#: translation_keys.py:147
 msgid "Permissions for group"
 msgstr "Permissions for group"
 
-#: conv.py:307
+#: translation_keys.py:148
 msgid "admin_information"
 msgstr "Admin Information"
 
-#: conv.py:309
+#: translation_keys.py:149
 msgid "coach_information"
 msgstr "Coach Information"
 
-#: conv.py:311
+#: translation_keys.py:150
 msgid "athlete_information"
 msgstr "Athlete Information"
 
-#: conv.py:313
+#: translation_keys.py:151
 msgid "create measurement type"
 msgstr "Create Measurement Type"
 
-#: conv.py:315
+#: translation_keys.py:152
 msgid "edit measurement type"
 msgstr "Edit Measurement Type"
 
-#: conv.py:317
+#: translation_keys.py:153
 msgid "Enter Session Title"
 msgstr "Enter Session Title"
 
-#: conv.py:319
+#: translation_keys.py:154
 msgid "measurement information"
 msgstr "Measurement Information"
 
-#: conv.py:321
+#: translation_keys.py:155
 msgid "Edit Reading"
 msgstr "Edit Reading"
 
-#: conv.py:323
+#: translation_keys.py:156
 msgid "ra.title.theme"
 msgstr "Theme"
 
-#: conv.py:325
+#: translation_keys.py:157
 msgid "ra.title.language"
 msgstr "Language"
 
-#: conv.py:327
+#: translation_keys.py:158
 msgid "dashboard"
 msgstr "Dashboard"
 
-#: conv.py:329
+#: translation_keys.py:159
 msgid "bosadmin"
 msgstr "Bos Admin"
 
-#: conv.py:331
+#: translation_keys.py:160
 msgid "ra.menu.usergroup"
 msgstr "User group"
 
-#: users/models.py:102
+#: translation_keys.py:161
+msgid "ra.gender.male"
+msgstr "Male"
+
+#: translation_keys.py:162
+msgid "ra.gender.female"
+msgstr "Female"
+
+#: translation_keys.py:163
+msgid "ra.request.approved"
+msgstr "Approved"
+
+#: translation_keys.py:164
+msgid "ra.request.pending"
+msgstr "Pending"
+
+#: translation_keys.py:165
+msgid "ra.request.rejected"
+msgstr "Rejected"
+
+#: users/models.py:103
 msgid "user with this email already exists"
 msgstr ""
 
-#: users/views.py:1071
+#: users/views.py:1028
 msgid "password do not match"
 msgstr ""
