@@ -18,17 +18,17 @@ import base64
 import psycopg2
 from django.conf import settings
 
-HTTP_URL = "http://192.168.0.122:8088/"
-SUPERSET_LOGIN_URL = HTTP_URL + "login/"
-SUPERSET_GET_ROLES_URL = HTTP_URL + "roles/api/read"
-SUPERSET_GET_TABLES_URL = HTTP_URL + "tablemodelview/api/read"
-SUPERSET_GET_DATABASES_URL = HTTP_URL + "databaseview/api/read"
-SUPERSET_GET_USERS_URL = HTTP_URL + "users/api/read"
-SUPERSET_CREATE_USERS_URL = HTTP_URL + "users/api/create"
-SUPERSET_EDIT_USERS_URL = HTTP_URL + "users/edit/%s"
-SUPERSET_CREATE_ROLES_URL = HTTP_URL + "roles/api/create"
-SUPERSET_CREATE_TABLES_URL = HTTP_URL + "tablemodelview/api/create"
-SUPERSET_CREATE_DATABASES_URL = HTTP_URL + "databaseview/api/create"
+SUPERSET_API_URL = getattr(settings, "SUPERSET_API_URL", None)
+SUPERSET_LOGIN_URL = SUPERSET_API_URL + "login/"
+SUPERSET_GET_ROLES_URL = SUPERSET_API_URL + "roles/api/read"
+SUPERSET_GET_TABLES_URL = SUPERSET_API_URL + "tablemodelview/api/read"
+SUPERSET_GET_DATABASES_URL = SUPERSET_API_URL + "databaseview/api/read"
+SUPERSET_GET_USERS_URL = SUPERSET_API_URL + "users/api/read"
+SUPERSET_CREATE_USERS_URL = SUPERSET_API_URL + "users/api/create"
+SUPERSET_EDIT_USERS_URL = SUPERSET_API_URL + "users/edit/%s"
+SUPERSET_CREATE_ROLES_URL = SUPERSET_API_URL + "roles/api/create"
+SUPERSET_CREATE_TABLES_URL = SUPERSET_API_URL + "tablemodelview/api/create"
+SUPERSET_CREATE_DATABASES_URL = SUPERSET_API_URL + "databaseview/api/create"
 SUPERSET_DATABASE = "superset"
 GAMMA_ROLE = "Gamma"
 SUPERSET_BASE_TABLE_NAME = "user_readings_%s"
@@ -357,11 +357,11 @@ def execute_raw_query(query, is_result_expected):
     record = None
     connection = None
     try:
-        connection = psycopg2.connect(user="bos",
-                                      password="bos",
-                                      host="127.0.0.1",
+        connection = psycopg2.connect(user=BOS_DATABASE_USER,
+                                      password=BOS_DATABASE_PASSWORD,
+                                      host=BOS_DATABASE_HOST,
                                       port="5432",
-                                      database="superset")
+                                      database=SUPERSET_DATABASE)
 
         cursor = connection.cursor()
         cursor.execute(query)
