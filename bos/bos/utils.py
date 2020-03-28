@@ -13,10 +13,13 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import requests
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from bos.constants import MESSAGE_KEY, VALID_FILE_EXTENSIONS
+from users.management.commands.superset_api import login_superset, create_superset_user, get_roles, \
+    find_ngo_role_from_superset_roles, find_gamma_role_from_superset_roles
 from users.models import UserHierarchy, User
 from users.serializers import UserHierarchySerializer, UserRestrictedDetailSerializer
 
@@ -229,7 +232,7 @@ def user_request_filters_from_request(request_data):
                         Q(first_name__icontains=value) | Q(last_name__icontains=value))
             if available_user_request_search_filter == 'status':
                 search_filter = search_filter & (
-                        Q(status=value))
+                    Q(status=value))
 
     return user_request_filter, search_filter
 
@@ -325,3 +328,25 @@ def is_extension_valid(extension):
     if extension.lower() in VALID_FILE_EXTENSIONS:
         return True
     return False
+
+
+def debug_print(message):
+    print(message)
+    return
+
+
+def open_superset_session_and_create_user(admin):
+    with requests.Session() as session:
+        session.auth = ('user', 'pass')
+        # Login in as admin
+        if not login_superset(session):
+            return False
+
+        is_successful, superset_roles = get_roles(session)
+        if not is_successful:
+            return False
+
+        superset_role = find_ngo_role_from_superset_roles(admin.ngo, superset_roles)
+        gamma_superset_role = find_gamma_role_from_superset_roles(superset_roles)
+        assert gamma_superset_role
+        return create_superset_user(admin,[superset_role, gamma_superset_role],session)

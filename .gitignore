@@ -106,3 +106,4 @@ venv.bak/
 *.png
 bos/*/migrations/
 .idea/
+bos/bos/superset_config.py

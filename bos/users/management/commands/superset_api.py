@@ -47,6 +47,11 @@ SUPERSET_DATABASE_CONNECTION_URL = BASE_DATABASE_CONNECTION_URL % (BOS_DATABASE_
                                                                    BOS_DATABASE_HOST, SUPERSET_DATABASE)
 
 
+def debug_print(message):
+    print(message)
+    return
+
+
 def find_user(admin_user, superset_users):
     for superset_user in superset_users:
         if admin_user.username == superset_user.username:
@@ -91,10 +96,10 @@ def find_bos_database_from_superset_databases(superset_databases):
     return None
 
 
-def get_users(self, session):
+def get_users(session):
     response = session.get(SUPERSET_GET_USERS_URL)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Get users failed'))
+        debug_print('Get users failed')
         return False, []
 
     json_data = response.json()
@@ -104,14 +109,14 @@ def get_users(self, session):
     for index, user_json in enumerate(users_json):
         user_json['pk'] = users_pks[index]
         superset_users.append(SupersetUser.from_json(user_json))
-    self.stdout.write(self.style.SUCCESS('Get users successful'))
+    debug_print('Get users successful')
     return True, superset_users
 
 
-def get_roles(self, session):
+def get_roles(session):
     response = session.get(SUPERSET_GET_ROLES_URL)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Get roles failed'))
+        debug_print('Get roles failed')
         return False, []
 
     json_data = response.json()
@@ -121,15 +126,14 @@ def get_roles(self, session):
     for index, role_json in enumerate(roles_json):
         role_json['pk'] = roles_pks[index]
         superset_roles.append(SupersetRole.from_json(role_json))
-    self.stdout.write(self.style.SUCCESS('Get roles successful'))
-    print(superset_roles)
+    debug_print('Get roles successful')
     return True, superset_roles
 
 
-def get_tables(self, session):
+def get_tables(session):
     response = session.get(SUPERSET_GET_TABLES_URL)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Get roles failed'))
+        debug_print('Get roles failed')
         return False, []
 
     json_data = response.json()
@@ -139,15 +143,15 @@ def get_tables(self, session):
     for index, table_json in enumerate(roles_json):
         table_json['pk'] = roles_pks[index]
         superset_tables.append(SupersetTable.from_json(table_json))
-    self.stdout.write(self.style.SUCCESS('Get tables successful'))
-    print(superset_tables)
+    debug_print('Get tables successful')
     return True, superset_tables
 
 
-def get_databases(self, session):
+def get_databases(session):
     response = session.get(SUPERSET_GET_DATABASES_URL)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Get databases failed'))
+        debug_print('Get databases failed')
+        print(response)
         return False, []
 
     json_data = response.json()
@@ -157,76 +161,68 @@ def get_databases(self, session):
     for index, database_json in enumerate(databases_json):
         database_json['pk'] = databases_pks[index]
         superset_databases.append(SupersetDatabase.from_json(database_json))
-    self.stdout.write(self.style.SUCCESS('Get databases successful'))
-    print(superset_databases)
+    debug_print('Get databases successful')
     return True, superset_databases
 
 
-def is_superset_user_dirty(self, user, superset_user):
-    print(user.is_active)
-    print(superset_user.active)
+def is_superset_user_dirty(user, superset_user):
     if user.username != superset_user.username:
-        self.stdout.write(self.style.SUCCESS('username changed'))
+        debug_print('username changed')
         return True
     if user.first_name != superset_user.first_name:
-        self.stdout.write(self.style.SUCCESS('first_name changed'))
+        debug_print('first_name changed')
         return True
     if user.last_name != superset_user.last_name:
-        self.stdout.write(self.style.SUCCESS('last_name changed'))
+        debug_print('last_name changed')
         return True
     if user.is_active != superset_user.active:
-        self.stdout.write(self.style.SUCCESS('active changed'))
+        debug_print('active changed')
         return True
     if user.email != superset_user.email:
-        self.stdout.write(self.style.SUCCESS('email changed'))
+        debug_print('email changed')
         return True
     return False
 
 
-def create_role(self, ngo, permission_view, session):
+def create_role(ngo, permission_view, session):
     create_data = {"name": ngo.key,
                    "permissions": [permission_view.pk]}
-    print(create_data)
     response = session.post(SUPERSET_CREATE_ROLES_URL, data=create_data)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Create role failed'))
+        debug_print('Create role failed')
         return False
-    self.stdout.write(self.style.SUCCESS('Create role successful'))
-    print(response.json())
+    debug_print('Create role successful')
     return True
 
 
-def create_table(self, ngo, superset_bos_database, session):
+def create_table(ngo, superset_bos_database, session):
     ngo_table_name = SUPERSET_BASE_TABLE_NAME % ngo.key
     create_data = {"database": superset_bos_database.pk,
                    "table_name": ngo_table_name}
     response = session.post(SUPERSET_CREATE_TABLES_URL, data=create_data)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Create table failed'))
+        debug_print('Create table failed')
         print(response.json())
         return False
-    self.stdout.write(self.style.SUCCESS('Create table successful'))
-    print(response.json())
+    debug_print('Create table successful')
     return True
 
 
-def create_bos_database(self, session):
+def create_bos_database(session):
     create_data = {"database_name": BOS_DATABASE_NAME,
                    "sqlalchemy_uri": BOS_DATABASE_CONNECTION_URL,
                    "expose_in_sqllab": True,
                    }
     response = session.post(SUPERSET_CREATE_DATABASES_URL, data=create_data)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Create bos database failed'))
-        print(response)
+        debug_print('Create bos database failed')
         return False
-    self.stdout.write(self.style.SUCCESS('Create bos database successful'))
-    print(response.json())
+    debug_print('Create bos database successful')
     return True
 
 
-def create_ngo_role_if_needed(self, ngos, session):
-    is_successful, superset_roles = get_roles(self, session)
+def create_ngo_role_if_needed(ngos, session):
+    is_successful, superset_roles = get_roles(session)
     if not is_successful:
         return False
 
@@ -245,40 +241,40 @@ def create_ngo_role_if_needed(self, ngos, session):
         if not superset_role:
             permission_view = find_ngo_permission_view_from_permission_views(ngo, permission_views)
 
-            is_successful = create_role(self, ngo, permission_view, session)
+            is_successful = create_role(ngo, permission_view, session)
             if not is_successful:
                 return False
     return True
 
 
-def create_ngo_table_if_needed(self, ngos, superset_bos_database, session):
-    is_successful, superset_tables = get_tables(self, session)
+def create_ngo_table_if_needed(ngos, superset_bos_database, session):
+    is_successful, superset_tables = get_tables(session)
     if not is_successful:
         return False
 
     for ngo in ngos:
         superset_table = find_ngo_table_from_superset_tables(ngo, superset_tables)
         if not superset_table:
-            is_successful = create_table(self, ngo, superset_bos_database, session)
+            is_successful = create_table(ngo, superset_bos_database, session)
             if not is_successful:
                 return False
     return True
 
 
-def create_bos_database_if_needed(self, session):
-    is_successful, superset_databases = get_databases(self, session)
+def create_bos_database_if_needed(session):
+    is_successful, superset_databases = get_databases(session)
     if not is_successful:
         return False
 
     superset_bos_database = find_bos_database_from_superset_databases(superset_databases)
     if not superset_bos_database:
-        is_successful = create_bos_database(self, session)
+        is_successful = create_bos_database(session)
         if not is_successful:
             return False
     return True
 
 
-def update_superset_user_password(self, user):
+def update_superset_user_password(user):
     algorithm, iterations, salt, password_hash = user.password.split('$', 3)
     algorithm = algorithm.replace("_", ":")
     password_hash = base64.b64decode(password_hash).hex()
@@ -287,16 +283,14 @@ def update_superset_user_password(self, user):
     query_string = "UPDATE ab_user SET password='%s' WHERE username='%s';" % (superset_password, user.username)
     is_successful, _ = execute_raw_query(query_string, False)
     if not is_successful:
-        self.stdout.write(self.style.ERROR('updated password %s') % user.username)
+        debug_print('updated not password %s' % user.username)
         return False
-    print(query_string)
-    print(superset_password)
-    self.stdout.write(self.style.SUCCESS('Updated password %s') % user.username)
+    debug_print('Updated password %s' % user.username)
     return True
 
 
-def update_superset_user_if_needed(self, user, superset_user, superset_roles, session):
-    if is_superset_user_dirty(self, user, superset_user):
+def update_superset_user_if_needed(user, superset_user, superset_roles, session):
+    if is_superset_user_dirty(user, superset_user):
         update_data = {}
         update_data["first_name"] = user.first_name
         update_data["last_name"] = user.last_name
@@ -307,48 +301,49 @@ def update_superset_user_if_needed(self, user, superset_user, superset_roles, se
         # update_data["conf_password"] = "admin@123"
         response = session.post(SUPERSET_EDIT_USERS_URL % superset_user.pk, data=update_data)
         if response.status_code != HTTP_OK:
-            self.stdout.write(self.style.ERROR('Update user failed'))
+            debug_print('Update user failed')
             return False
-        self.stdout.write(self.style.SUCCESS('Update user successful'))
+        debug_print('Update user successful')
 
-    self.stdout.write(self.style.SUCCESS('User is upto date'))
+    debug_print('User is upto date')
 
     # update Password for user
-    if not update_superset_user_password(self, user):
-        self.stdout.write(self.style.ERROR('Update password failed'))
+    if not update_superset_user_password(user):
+        debug_print('Update password failed')
         return False
 
     return True
 
 
-def create_superset_user(self, user, superset_roles, session):
+def create_superset_user(user, superset_roles, session):
     create_data = {}
     create_data["first_name"] = user.first_name
     create_data["last_name"] = user.last_name
     create_data["username"] = user.username
     create_data["email"] = user.email
+    create_data["active"] = True
     create_data["roles"] = [superset_role.pk for superset_role in superset_roles]
     create_data["password"] = "admin@123"
     create_data["conf_password"] = "admin@123"
     response = session.post(SUPERSET_CREATE_USERS_URL, data=create_data)
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Create user failed'))
+        debug_print('Create user failed')
         return False
-    self.stdout.write(self.style.SUCCESS('Create user successful'))
+    debug_print('Create user successful')
 
     # update Password for user
-    if not update_superset_user_password(self, user):
-        self.stdout.write(self.style.ERROR('Update password failed'))
+    if not update_superset_user_password(user):
+        debug_print('Update password failed')
         return False
     return True
 
 
-def login_superset(self, session):
+def login_superset(session):
     response = session.post(SUPERSET_LOGIN_URL, data={"username": "admin", "password": "admin"})
     if response.status_code != HTTP_OK:
-        self.stdout.write(self.style.ERROR('Login failed'))
+        debug_print('Login failed')
         return False
-    self.stdout.write(self.style.SUCCESS('Login successful'))
+    debug_print('Login successful')
     return True
 
 
@@ -373,7 +368,7 @@ def execute_raw_query(query, is_result_expected):
         cursor.close()
     except (Exception, psycopg2.Error) as error:
         is_successful = False
-        print("Error while connecting to PostgreSQL", error)
+        debug_print("Error while connecting to PostgreSQL", error)
     finally:
         # closing database connection.
         if connection is not None:

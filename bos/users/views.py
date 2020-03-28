@@ -47,10 +47,11 @@ from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_user_ngo, error_403_json, \
     request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
     user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
-    user_request_filters_from_request, request_user_belongs_to_user_request_ngo
+    user_request_filters_from_request, request_user_belongs_to_user_request_ngo, open_superset_session_and_create_user
 from measurements.models import Measurement
 from resources.models import Resource, EvaluationResource
 from resources.serializers import ResourceDetailSerializer, EvaluationResourceDetailSerializer
+from users.management.commands.superset_api import update_superset_user_password
 from users.models import User, UserGroup, UserResource, MobileAuthToken, UserReading, UserRequest
 from users.serializers import UserSerializer, PermissionGroupDetailSerializer, PermissionSerializer, AthleteSerializer, \
     UserReadingSerializer, CoachSerializer, PermissionGroupSerializer, \
@@ -97,21 +98,27 @@ class UserViewSet(ViewSet):
             confirm_password = request.data.get('confirmPassword')
             current_password = request.data.get('currentpassword')
             if not check_password(current_password, user.password):
-                message = "current password is wrong"
-                return Response(status=400, data=error_checkone(message))
+                message = [{'message': "current password is wrong"}]
+                raise ValidationException(message)
             if confirm_password != password:
-                message = "Confirm password do not match"
-                return Response(status=400, data=error_checkone(message))
+                message = [{'message': "Confirm password do not match"}]
+                raise ValidationException(message)
             if current_password == password:
-                message = "old and new passwords should not be same"
-                return Response(status=400, data=error_checkone(message))
+                message = [{'message': "old and new passwords should not be same"}]
+                raise ValidationException(message)
             validate_password(password)
             user.set_password(password)
             user.save()
+
+            if user.role == User.ADMIN:
+                if not update_superset_user_password(user):
+                    raise ValidationException([{'message': 'Superset user password update failed'}])
             return Response(status=201)
         except ValidationError as e:
             error = convert_validation_error_into_response_error(e)
             return Response(error, status=400)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
 
     @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
     def change_language(self, request, pk=None):
@@ -206,6 +213,10 @@ class AdminViewSet(ViewSet):
                     group = Group.objects.get(id=group_id, name__startswith=request.user.ngo.key)
                     admin.groups.add(group)
 
+                # Create user in superset
+
+                if not open_superset_session_and_create_user(admin):
+                    raise ValidationException([{'message': 'Superset user creation failed'}])
                 return Response(serializer.data, status=201)
         except ValidationException as e:
             return Response(e.errors, status=400)
@@ -453,7 +464,6 @@ class CoachViewSet(ViewSet):
 
                 coach = serializer.save()
                 coach.set_password(password)
-                coach.save()
 
                 # baselines = create_data.get("baselines", [])
                 # for baseline in baselines:
@@ -484,7 +494,8 @@ class CoachViewSet(ViewSet):
         except ValidationException as e:
             return Response(status=400, data=e.errors)
         except ValidationError as e:
-            return Response(status=400, data=e.errors)
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
 
     def retrieve(self, request, pk=None):
         if not has_permission(request, PERMISSION_CAN_VIEW_COACH):
@@ -1061,7 +1072,8 @@ class UserRequestViewSet(ViewSet):
         except ValidationException as e:
             return Response(status=400, data=error_checkone(e.errors))
         except ValidationError as e:
-            return Response(status=400, data=e.errors)
+            error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
 
         message = "Accepted"
         return Response(status=200, data=request_status(message))

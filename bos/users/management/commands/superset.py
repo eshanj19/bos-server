@@ -33,9 +33,9 @@ def _process_ngo(self, ngo, superset_users, superset_role, session):
         if superset_user:
             self.stdout.write(self.style.SUCCESS('Superset user exists'))
             # Check if superset user is active
-            update_superset_user_if_needed(self, admin_user, superset_user, superset_role, session)
+            update_superset_user_if_needed(admin_user, superset_user, superset_role, session)
         else:
-            create_superset_user(self, admin_user, superset_role, session)
+            create_superset_user(admin_user, superset_role, session)
 
 
 def _superset_init(self):
@@ -43,15 +43,15 @@ def _superset_init(self):
     with requests.Session() as session:
         session.auth = ('user', 'pass')
         # Login in as admin
-        if not login_superset(self, session):
+        if not login_superset(session):
             return
 
         # Check if bos database created in superset database
-        is_successful, superset_databases = get_databases(self, session)
+        is_successful, superset_databases = get_databases(session)
         if not is_successful:
             return False
 
-        is_successful = create_bos_database_if_needed(self, session)
+        is_successful = create_bos_database_if_needed(session)
         if not is_successful:
             return
 
@@ -60,19 +60,19 @@ def _superset_init(self):
             return False
 
         # Check if tables are created for all the ngos
-        is_successful = create_ngo_table_if_needed(self, ngos, superset_bos_database, session)
+        is_successful = create_ngo_table_if_needed(ngos, superset_bos_database, session)
         if not is_successful:
             return
 
         # Check if permissions are created for all the ngos
-        is_successful = create_ngo_role_if_needed(self, ngos, session)
+        is_successful = create_ngo_role_if_needed(ngos, session)
         if not is_successful:
             return
         # Fetch all users in superset
-        is_successful, superset_users = get_users(self, session)
+        is_successful, superset_users = get_users(session)
         if not is_successful:
             return
-        is_successful, superset_roles = get_roles(self, session)
+        is_successful, superset_roles = get_roles(session)
         if not is_successful:
             return
         for ngo in ngos:
