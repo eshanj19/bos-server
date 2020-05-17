@@ -18,6 +18,7 @@ import os
 import pathlib
 
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 # Create your views here.
 from rest_framework.decorators import action
@@ -33,7 +34,7 @@ from bos.permissions import has_permission, PERMISSION_CAN_VIEW_RESOURCE, PERMIS
     PERMISSION_CAN_ADD_REGISTRATION_FORM, PERMISSION_CAN_CHANGE_REGISTRATION_FORM, PERMISSION_CAN_ADD_READING
 from bos.storage_backends import S3Storage
 from bos.utils import resource_filters_from_request, error_403_json, error_400_json, request_user_belongs_to_resource, \
-    is_extension_valid, error_file_extension_json, error_500_json
+    is_extension_valid, error_file_extension_json, error_500_json, error_protected_resource
 from resources.models import Resource, EvaluationResource
 from resources.serializers import ResourceSerializer, EvaluationResourceDetailSerializer, \
     EvaluationResourceUserWriteOnlySerializer, \
@@ -186,7 +187,10 @@ class ResourceViewSet(ViewSet):
         if not request_user_belongs_to_resource(request, resource):
             return Response(status=403, data=error_403_json())
 
-        resource.delete()
+        try:
+            resource.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_resource())
         return Response(status=204)
 
     @action(detail=True, methods=[METHOD_POST])

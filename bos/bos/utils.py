@@ -261,6 +261,26 @@ def request_status(message):
     return {MESSAGE_KEY: _(message)}
 
 
+def error_protected_user():
+    return {MESSAGE_KEY: _("Cannot delete user. Try deactivate instead.")}
+
+
+def error_protected_group():
+    return {MESSAGE_KEY: _("Cannot delete group. Try deactivate instead.")}
+
+
+def error_protected_resource():
+    return {MESSAGE_KEY: _("Cannot delete resource. Try deactivate instead.")}
+
+
+def error_protected_measurement():
+    return {MESSAGE_KEY: _("Cannot delete measurement. Try deactivate instead.")}
+
+
+def error_protected_measurement_type():
+    return {MESSAGE_KEY: _("Cannot delete measurement type. Try deactivate instead.")}
+
+
 def error_404_json():
     return {MESSAGE_KEY: _('ERROR_MESSAGE_404')}
 
@@ -349,4 +369,4 @@ def open_superset_session_and_create_user(admin):
         superset_role = find_ngo_role_from_superset_roles(admin.ngo, superset_roles)
         gamma_superset_role = find_gamma_role_from_superset_roles(superset_roles)
         assert gamma_superset_role
-        return create_superset_user(admin,[superset_role, gamma_superset_role],session)
+        return create_superset_user(admin, [superset_role, gamma_superset_role], session)

@@ -22,6 +22,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction, DatabaseError, IntegrityError
 from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from rest_framework.decorators import action, api_view, permission_classes
@@ -47,7 +48,8 @@ from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_
     convert_validation_error_into_response_error, error_400_json, request_user_belongs_to_user_ngo, error_403_json, \
     request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
     user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
-    user_request_filters_from_request, request_user_belongs_to_user_request_ngo, open_superset_session_and_create_user
+    user_request_filters_from_request, request_user_belongs_to_user_request_ngo, open_superset_session_and_create_user, \
+    error_file_extension_json, error_protected_user, error_protected_group
 from measurements.models import Measurement
 from resources.models import Resource, EvaluationResource
 from resources.serializers import ResourceDetailSerializer, EvaluationResourceDetailSerializer
@@ -275,7 +277,11 @@ class AdminViewSet(ViewSet):
         if not request_user_belongs_to_user_ngo(request, admin):
             return Response(status=403, data=error_403_json())
 
-        admin.delete()
+        try:
+            admin.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_user())
+
         return Response(status=204)
 
 
@@ -415,7 +421,10 @@ class AthleteViewSet(ViewSet):
         if not request_user_belongs_to_user_ngo(request, athlete):
             return Response(status=403, data=error_403_json())
 
-        athlete.delete()
+        try:
+            athlete.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_user())
         return Response(status=204)
 
 
@@ -565,7 +574,11 @@ class CoachViewSet(ViewSet):
 
         if not request_user_belongs_to_user_ngo(request, coach):
             return Response(status=403, data=error_403_json())
-        coach.delete()
+
+        try:
+            coach.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_user())
         return Response(status=204)
 
 
@@ -652,7 +665,11 @@ class UserGroupViewSet(ViewSet):
             return Response(status=404)
         if not request_user_belongs_to_user_group_ngo(request, user_group):
             return Response(status=403, data=error_403_json())
-        user_group.delete()
+
+        try:
+            user_group.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_group())
         return Response(status=204)
 
 

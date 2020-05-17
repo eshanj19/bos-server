@@ -14,6 +14,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from psycopg2._psycopg import DatabaseError
 from rest_framework.response import Response
@@ -25,7 +26,8 @@ from bos.pagination import BOSPageNumberPagination
 from bos.permissions import has_permission, PERMISSION_CAN_VIEW_MEASUREMENT, PERMISSION_CAN_ADD_MEASUREMENT, \
     PERMISSION_CAN_CHANGE_MEASUREMENT, PERMISSION_CAN_DESTROY_MEASUREMENT, PERMISSION_CAN_VIEW_MEASUREMENT_TYPE, \
     PERMISSION_CAN_ADD_MEASUREMENT_TYPE, PERMISSION_CAN_CHANGE_MEASUREMENT_TYPE, PERMISSION_CAN_DESTROY_MEASUREMENT_TYPE
-from bos.utils import measurement_filters_from_request, measurement_type_filters_from_request
+from bos.utils import measurement_filters_from_request, measurement_type_filters_from_request, \
+    error_protected_measurement, error_protected_measurement_type
 from measurements.models import Measurement, MeasurementType
 from measurements.serializers import MeasurementSerializer, MeasurementTypeSerializer
 
@@ -97,13 +99,15 @@ class MeasurementViewSet(ViewSet):
             return Response(status=403)
 
         try:
-            item = Measurement.objects.get(key=pk)
+            measurement = Measurement.objects.get(key=pk)
         except Measurement.DoesNotExist:
             return Response(status=404)
-        item.delete()
+
+        try:
+            measurement.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_measurement())
         return Response(status=204)
-
-
 
 
 class MeasurementTypeViewSet(ViewSet):
@@ -167,8 +171,12 @@ class MeasurementTypeViewSet(ViewSet):
             return Response(status=403)
 
         try:
-            item = MeasurementType.objects.get(key=pk)
+            measurement_type = MeasurementType.objects.get(key=pk)
         except MeasurementType.DoesNotExist:
             return Response(status=404)
-        item.delete()
+
+        try:
+            measurement_type.delete()
+        except ProtectedError:
+            return Response(status=400, data=error_protected_measurement_type())
         return Response(status=204)
