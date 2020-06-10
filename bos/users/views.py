@@ -49,7 +49,7 @@ from bos.utils import user_filters_from_request, get_ngo_group_name, user_group_
     request_user_belongs_to_user_group_ngo, find_athletes_under_user, \
     user_reading_filters_from_request, request_status, request_user_belongs_to_reading, error_checkone, \
     user_request_filters_from_request, request_user_belongs_to_user_request_ngo, open_superset_session_and_create_user, \
-    error_file_extension_json, error_protected_user, error_protected_group
+    error_file_extension_json, error_protected_user, error_protected_group, convert_message_error
 from measurements.models import Measurement
 from resources.models import Resource, EvaluationResource
 from resources.serializers import ResourceDetailSerializer, EvaluationResourceDetailSerializer
@@ -118,6 +118,36 @@ class UserViewSet(ViewSet):
             return Response(status=201)
         except ValidationError as e:
             error = convert_validation_error_into_response_error(e)
+            return Response(error, status=400)
+        except ValidationException as e:
+            return Response(e.errors, status=400)
+
+    @action(detail=True, methods=[METHOD_POST], permission_classes=[IsAuthenticated])
+    def reset_password_by_admin(self, request, pk=None):
+        if request.user.role != User.ADMIN:
+            return Response(status=403, data=error_403_json())
+        try:
+            user = User.objects.get(key=pk)
+            if not request_user_belongs_to_user_ngo(request, user):
+                return Response(status=403, data=error_403_json())
+        except User.DoesNotExist:
+            return Response(status=404)
+        try:
+            password = request.data.get('password')
+            confirm_password = request.data.get('confirmPassword')
+            if confirm_password != password:
+                message = [{'message': "Confirm password do not match"}]
+                raise ValidationException(message)
+            validate_password(password)
+            user.set_password(password)
+            user.save()
+
+            if user.role == User.ADMIN:
+                if not update_superset_user_password(user):
+                    raise ValidationException([{'message': 'Superset user password update failed'}])
+            return Response(status=201)
+        except ValidationError as e:
+            error = convert_message_error(e)
             return Response(error, status=400)
         except ValidationException as e:
             return Response(e.errors, status=400)
@@ -1131,7 +1161,7 @@ def login_mobile_view(request):
     user = authenticate(username=username, password=password)
     if user:
         # A backend authenticated the credentials
-        expiry_date = datetime.now(tz=timezone.utc) + timedelta(days=30)
+        expiry_date = datetime.now(tz=timezone.utc) + timedelta(days=365)
         auth_token = MobileAuthToken.objects.create(user=user, expiry_date=expiry_date)
         data = {'username': user.username,
                 'key': user.key,

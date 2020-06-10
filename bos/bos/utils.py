@@ -241,6 +241,10 @@ def convert_validation_error_into_response_error(validation_error):
     return {'password': validation_error}
 
 
+def convert_message_error(validation_error):
+    return {MESSAGE_KEY: validation_error}
+
+
 def error_checkone(message):
     return {MESSAGE_KEY: _(message)}
 

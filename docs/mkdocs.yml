@@ -1,0 +1,10 @@
+site_name: Bridges of Sports
+theme:
+  name: 'material'
+extra_css: [css/extra.css]
+nav:
+- Home Page: 'index.md'
+- NGO Admin:
+   - 'Introduction': 'ngo_admin_intro.md'
+
+- Privacy Policy: 'privacy_policy.md'

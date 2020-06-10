@@ -107,3 +107,4 @@ venv.bak/
 bos/*/migrations/
 .idea/
 bos/bos/superset_config.py
+docs/site
