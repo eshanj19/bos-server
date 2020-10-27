@@ -17,7 +17,7 @@ click==6.7
 colorama==0.4.3
 contextlib2==0.6.0.post1
 croniter==0.3.31
-cryptography==2.8
+cryptography==3.2
 decorator==4.4.1
 defusedxml==0.6.0
 Django==2.2.10
