@@ -27,7 +27,7 @@ django-extensions==2.1.5
 django-mailgun==0.9.1
 django-storages==1.9.1
 django-stubs==1.1.0
-djangorestframework==3.9.1
+djangorestframework==3.11.2
 djangorestframework-stubs==0.2.0
 docutils==0.15.2
 drf-generators==0.4.0
