@@ -82,7 +82,7 @@ pyarrow==0.15.1
 pycparser==2.19
 pydotplus==2.0.2
 Pygments==2.4.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 pymdown-extensions==6.1
 pyparsing==2.4.2
 pyrsistent==0.15.7
